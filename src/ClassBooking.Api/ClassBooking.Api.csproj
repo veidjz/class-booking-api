@@ -11,4 +11,9 @@
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ClassBooking.Application\ClassBooking.Application.csproj" />
+    <ProjectReference Include="..\ClassBooking.Infrastructure\ClassBooking.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

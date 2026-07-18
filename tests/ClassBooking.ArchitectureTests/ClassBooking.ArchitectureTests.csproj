@@ -18,4 +18,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ClassBooking.Domain\ClassBooking.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ClassBooking.Application\ClassBooking.Application.csproj" />
+    <ProjectReference Include="..\..\src\ClassBooking.Infrastructure\ClassBooking.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ClassBooking.Api\ClassBooking.Api.csproj" />
+    <ProjectReference Include="..\..\src\ClassBooking.Worker\ClassBooking.Worker.csproj" />
+  </ItemGroup>
+
 </Project>

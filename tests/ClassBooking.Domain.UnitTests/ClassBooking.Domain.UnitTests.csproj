@@ -18,4 +18,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ClassBooking.Domain\ClassBooking.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
