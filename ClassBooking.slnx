@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ClassBooking.Api/ClassBooking.Api.csproj" />
+    <Project Path="src/ClassBooking.Application/ClassBooking.Application.csproj" />
+    <Project Path="src/ClassBooking.Domain/ClassBooking.Domain.csproj" />
+    <Project Path="src/ClassBooking.Infrastructure/ClassBooking.Infrastructure.csproj" />
+    <Project Path="src/ClassBooking.Worker/ClassBooking.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ClassBooking.Application.UnitTests/ClassBooking.Application.UnitTests.csproj" />
+    <Project Path="tests/ClassBooking.ArchitectureTests/ClassBooking.ArchitectureTests.csproj" />
+    <Project Path="tests/ClassBooking.Domain.UnitTests/ClassBooking.Domain.UnitTests.csproj" />
+    <Project Path="tests/ClassBooking.IntegrationTests/ClassBooking.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
