@@ -3,9 +3,11 @@ using ClassBooking.Domain.Users;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.Infrastructure.Persistence.Interceptors;
 using ClassBooking.Infrastructure.Persistence.Repositories;
+using ClassBooking.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ClassBooking.Infrastructure;
 
@@ -30,6 +32,8 @@ public static class DependencyInjection
     services.AddScoped<IAppDbContext>(serviceProvider => serviceProvider.GetRequiredService<AppDbContext>());
     services.AddScoped<IUnitOfWork, UnitOfWork>();
     services.AddScoped<IUserRepository, UserRepository>();
+
+    services.Replace(ServiceDescriptor.Singleton<TimeProvider>(new MicrosecondTimeProvider(TimeProvider.System)));
 
     return services;
   }
