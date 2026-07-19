@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClassBooking.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260719201813_AddAccounts")]
+    [Migration("20260719205147_AddAccounts")]
     partial class AddAccounts
     {
         /// <inheritdoc />
@@ -125,9 +125,9 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasOne("ClassBooking.Domain.Users.User", null)
                         .WithOne()
                         .HasForeignKey("ClassBooking.Domain.Users.Student", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_students_users_id");
+                        .HasConstraintName("fk_students_users");
                 });
 
             modelBuilder.Entity("ClassBooking.Domain.Users.Teacher", b =>
@@ -135,9 +135,9 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasOne("ClassBooking.Domain.Users.User", null)
                         .WithOne()
                         .HasForeignKey("ClassBooking.Domain.Users.Teacher", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_teachers_users_id");
+                        .HasConstraintName("fk_teachers_users");
                 });
 #pragma warning restore 612, 618
         }

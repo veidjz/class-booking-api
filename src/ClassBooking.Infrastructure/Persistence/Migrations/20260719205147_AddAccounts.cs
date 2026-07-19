@@ -50,7 +50,8 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                         name: "fk_students_users",
                         column: x => x.id,
                         principalTable: "users",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -71,7 +72,8 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                         name: "fk_teachers_users",
                         column: x => x.id,
                         principalTable: "users",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 

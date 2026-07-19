@@ -122,9 +122,9 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasOne("ClassBooking.Domain.Users.User", null)
                         .WithOne()
                         .HasForeignKey("ClassBooking.Domain.Users.Student", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_students_users_id");
+                        .HasConstraintName("fk_students_users");
                 });
 
             modelBuilder.Entity("ClassBooking.Domain.Users.Teacher", b =>
@@ -132,9 +132,9 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasOne("ClassBooking.Domain.Users.User", null)
                         .WithOne()
                         .HasForeignKey("ClassBooking.Domain.Users.Teacher", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_teachers_users_id");
+                        .HasConstraintName("fk_teachers_users");
                 });
 #pragma warning restore 612, 618
         }

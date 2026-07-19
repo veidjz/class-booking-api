@@ -1,5 +1,6 @@
 using ClassBooking.Application.Abstractions.Data;
 using ClassBooking.Domain.Users;
+using ClassBooking.Infrastructure.Persistence.Conventions;
 using ClassBooking.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -10,14 +11,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
   public DbSet<User> Users => Set<User>();
 
-  protected override void OnModelCreating(ModelBuilder modelBuilder)
-  {
-    modelBuilder.Entity<User>();
-    modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-  }
+  protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+      modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
   protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
   {
+    configurationBuilder.Conventions.Add(_ => new SubtypeForeignKeyConvention());
+
     configurationBuilder.Properties<Guid>()
         .HaveConversion<GuidToBinary16Converter, GuidToBinary16Comparer>()
         .HaveColumnType("binary(16)");
