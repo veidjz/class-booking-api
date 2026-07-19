@@ -10,6 +10,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
   {
     builder.ToTable("users");
     builder.HasKey(user => user.Id);
+    builder.Property(user => user.Id).ValueGeneratedNever();
     builder.Ignore(user => user.DomainEvents);
     builder.Property(user => user.Name).HasMaxLength(120).IsRequired();
     builder.Property(user => user.Email).HasMaxLength(254).IsRequired();
