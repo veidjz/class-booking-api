@@ -13,8 +13,7 @@ namespace ClassBooking.IntegrationTests.Persistence.Fixtures;
 
 public sealed class ContainersFixture : IAsyncLifetime
 {
-  private readonly MySqlContainer _container = new MySqlBuilder()
-      .WithImage("mysql:8.4")
+  private readonly MySqlContainer _container = new MySqlBuilder("mysql:8.4")
       .WithDatabase("classbooking")
       .WithUsername("classbooking")
       .WithPassword("classbooking")
