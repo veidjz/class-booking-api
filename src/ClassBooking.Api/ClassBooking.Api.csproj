@@ -9,11 +9,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.15" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ClassBooking.Application\ClassBooking.Application.csproj" />
     <ProjectReference Include="..\ClassBooking.Infrastructure\ClassBooking.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ClassBooking.IntegrationTests" />
   </ItemGroup>
 
 </Project>

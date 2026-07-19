@@ -16,7 +16,7 @@ public sealed class DependencyRuleTests
   [Fact]
   public void Domain_should_not_depend_on_other_layers()
   {
-    var result = Types.InAssembly(Domain)
+    TestResult result = Types.InAssembly(Domain)
         .Should()
         .NotHaveDependencyOnAny(ApplicationNamespace, InfrastructureNamespace, ApiNamespace, WorkerNamespace)
         .GetResult();
@@ -27,7 +27,7 @@ public sealed class DependencyRuleTests
   [Fact]
   public void Application_should_not_depend_on_infrastructure_or_hosts()
   {
-    var result = Types.InAssembly(Application)
+    TestResult result = Types.InAssembly(Application)
         .Should()
         .NotHaveDependencyOnAny(InfrastructureNamespace, ApiNamespace, WorkerNamespace)
         .GetResult();
@@ -38,7 +38,7 @@ public sealed class DependencyRuleTests
   [Fact]
   public void Application_should_not_depend_on_infrastructure_drivers()
   {
-    var result = Types.InAssembly(Application)
+    TestResult result = Types.InAssembly(Application)
         .Should()
         .NotHaveDependencyOnAny("Pomelo", "MySqlConnector", "StackExchange.Redis", "RabbitMQ", "Hangfire")
         .GetResult();
