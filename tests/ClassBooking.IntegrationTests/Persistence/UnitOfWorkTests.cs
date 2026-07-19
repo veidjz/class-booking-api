@@ -70,6 +70,27 @@ public sealed class UnitOfWorkTests(ContainersFixture fixture) : DatabaseTestBas
   }
 
   [Fact]
+  public async Task should_not_leak_the_failed_change_into_the_next_save_of_the_same_scope()
+  {
+    await AddAsync(Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt));
+
+    using IServiceScope scope = CreateScope();
+    AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+    context.Users.Add(Student.Register("Bruno", "ana@classbooking.dev", "hash", CreatedAt));
+    Result duplicate = await unitOfWork.SaveChangesAsync(default);
+
+    context.Users.Add(Student.Register("Carla", "carla@classbooking.dev", "hash", CreatedAt));
+    Result second = await unitOfWork.SaveChangesAsync(default);
+
+    duplicate.IsFailure.Should().BeTrue();
+    second.IsSuccess.Should().BeTrue();
+    (await ScalarAsync<long>("SELECT COUNT(*) FROM users WHERE name = 'Carla'")).Should().Be(1);
+    (await ScalarAsync<long>("SELECT COUNT(*) FROM users WHERE name = 'Bruno'")).Should().Be(0);
+  }
+
+  [Fact]
   public void should_dequeue_domain_events_once()
   {
     using IServiceScope scope = CreateScope();
