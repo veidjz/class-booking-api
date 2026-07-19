@@ -11,7 +11,7 @@ public sealed class ApplicationRuleTests
   [Fact]
   public void Pipeline_behaviors_should_be_internal_and_sealed()
   {
-    var result = Types.InAssembly(Application)
+    TestResult result = Types.InAssembly(Application)
         .That()
         .ResideInNamespace("ClassBooking.Application.Behaviors")
         .And()
@@ -28,7 +28,7 @@ public sealed class ApplicationRuleTests
   [Fact]
   public void Request_handlers_should_be_internal_and_sealed()
   {
-    var offenders = Application.GetTypes()
+    string?[] offenders = Application.GetTypes()
         .Where(type => type.IsClass && ImplementsRequestHandler(type) && (type.IsPublic || !type.IsSealed))
         .Select(type => type.FullName)
         .ToArray();

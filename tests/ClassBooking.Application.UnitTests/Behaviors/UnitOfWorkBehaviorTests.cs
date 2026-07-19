@@ -28,7 +28,7 @@ public sealed class UnitOfWorkBehaviorTests
   [Fact]
   public async Task should_commit_transaction_when_handler_and_save_succeed()
   {
-    var response = await CreateBehavior().Handle(new CreateBookingCommand(Guid.CreateVersion7()), SuccessHandler, CancellationToken.None);
+    Result<Guid> response = await CreateBehavior().Handle(new CreateBookingCommand(Guid.CreateVersion7()), SuccessHandler, CancellationToken.None);
 
     response.IsSuccess.Should().BeTrue();
     _unitOfWork.Transaction.Should().NotBeNull();
@@ -40,7 +40,7 @@ public sealed class UnitOfWorkBehaviorTests
   [Fact]
   public async Task should_roll_back_without_saving_when_handler_returns_failure()
   {
-    var response = await CreateBehavior().Handle(
+    Result<Guid> response = await CreateBehavior().Handle(
         new CreateBookingCommand(Guid.CreateVersion7()),
         _ => Task.FromResult(Result.Failure<Guid>(SomeError)),
         CancellationToken.None);
@@ -57,7 +57,7 @@ public sealed class UnitOfWorkBehaviorTests
   {
     _unitOfWork.SaveResult = Result.Failure(SomeError);
 
-    var response = await CreateBehavior().Handle(new CreateBookingCommand(Guid.CreateVersion7()), SuccessHandler, CancellationToken.None);
+    Result<Guid> response = await CreateBehavior().Handle(new CreateBookingCommand(Guid.CreateVersion7()), SuccessHandler, CancellationToken.None);
 
     response.IsFailure.Should().BeTrue();
     response.Error.Should().Be(SomeError);
@@ -68,7 +68,7 @@ public sealed class UnitOfWorkBehaviorTests
   [Fact]
   public async Task should_publish_domain_events_before_saving_when_handler_succeeds()
   {
-    var first = new BookingCreatedDomainEvent(Guid.CreateVersion7());
+    BookingCreatedDomainEvent first = new BookingCreatedDomainEvent(Guid.CreateVersion7());
     _unitOfWork.EventBatches.Enqueue([first]);
 
     await CreateBehavior().Handle(new CreateBookingCommand(Guid.CreateVersion7()), SuccessHandler, CancellationToken.None);
@@ -80,8 +80,8 @@ public sealed class UnitOfWorkBehaviorTests
   [Fact]
   public async Task should_keep_publishing_when_event_handlers_raise_cascading_events()
   {
-    var first = new BookingCreatedDomainEvent(Guid.CreateVersion7());
-    var cascaded = new ReminderScheduledDomainEvent(first.BookingId);
+    BookingCreatedDomainEvent first = new BookingCreatedDomainEvent(Guid.CreateVersion7());
+    ReminderScheduledDomainEvent cascaded = new ReminderScheduledDomainEvent(first.BookingId);
     _unitOfWork.EventBatches.Enqueue([first]);
     _unitOfWork.EventBatches.Enqueue([cascaded]);
 
@@ -106,7 +106,7 @@ public sealed class UnitOfWorkBehaviorTests
   [Fact]
   public async Task should_roll_back_and_propagate_when_handler_throws()
   {
-    var act = () => CreateBehavior().Handle(
+    Func<Task<Result<Guid>>> act = () => CreateBehavior().Handle(
         new CreateBookingCommand(Guid.CreateVersion7()),
         _ => throw new InvalidOperationException("boom"),
         CancellationToken.None);
@@ -139,7 +139,7 @@ public sealed class UnitOfWorkBehaviorTests
     public IReadOnlyCollection<IDomainEvent> DequeueDomainEvents()
     {
       Calls.Add("dequeue");
-      return EventBatches.TryDequeue(out var batch) ? batch : [];
+      return EventBatches.TryDequeue(out IDomainEvent[]? batch) ? batch : [];
     }
 
     public Task<Result> SaveChangesAsync(CancellationToken cancellationToken)

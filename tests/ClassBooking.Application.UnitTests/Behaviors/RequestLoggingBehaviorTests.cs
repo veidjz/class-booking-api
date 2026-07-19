@@ -22,7 +22,7 @@ public sealed class RequestLoggingBehaviorTests
   [Fact]
   public async Task should_log_start_and_completion_as_information_when_handler_succeeds()
   {
-    var response = await CreateBehavior().Handle(
+    Result response = await CreateBehavior().Handle(
         new ConfirmBookingCommand(Guid.CreateVersion7()),
         _ =>
         {
@@ -43,7 +43,7 @@ public sealed class RequestLoggingBehaviorTests
   [Fact]
   public async Task should_log_error_code_as_information_when_handler_returns_failure()
   {
-    var response = await CreateBehavior().Handle(
+    Result response = await CreateBehavior().Handle(
         new ConfirmBookingCommand(Guid.CreateVersion7()),
         _ => Task.FromResult(Result.Failure(SomeError)),
         CancellationToken.None);
@@ -63,7 +63,7 @@ public sealed class RequestLoggingBehaviorTests
         _ => Task.FromResult(Result.Success()),
         CancellationToken.None);
 
-    var scope = _logger.Scopes.Should().ContainSingle().Subject
+    IReadOnlyDictionary<string, object> scope = _logger.Scopes.Should().ContainSingle().Subject
         .Should().BeAssignableTo<IReadOnlyDictionary<string, object>>().Subject;
     scope.Should().Contain("RequestName", "ConfirmBookingCommand");
   }
@@ -71,7 +71,7 @@ public sealed class RequestLoggingBehaviorTests
   [Fact]
   public async Task should_propagate_exception_without_logging_error_when_handler_throws()
   {
-    var act = () => CreateBehavior().Handle(
+    Func<Task<Result>> act = () => CreateBehavior().Handle(
         new ConfirmBookingCommand(Guid.CreateVersion7()),
         _ => throw new InvalidOperationException("boom"),
         CancellationToken.None);

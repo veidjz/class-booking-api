@@ -10,7 +10,7 @@ public sealed class ResultTests
   [Fact]
   public void should_be_success_without_error_when_created_with_success()
   {
-    var result = Result.Success();
+    Result result = Result.Success();
 
     result.IsSuccess.Should().BeTrue();
     result.IsFailure.Should().BeFalse();
@@ -20,7 +20,7 @@ public sealed class ResultTests
   [Fact]
   public void should_be_failure_with_error_when_created_with_failure()
   {
-    var result = Result.Failure(SomeError);
+    Result result = Result.Failure(SomeError);
 
     result.IsSuccess.Should().BeFalse();
     result.IsFailure.Should().BeTrue();
@@ -30,7 +30,7 @@ public sealed class ResultTests
   [Fact]
   public void should_throw_when_failure_created_without_error()
   {
-    var act = () => Result.Failure(Error.None);
+    Func<Result> act = () => Result.Failure(Error.None);
 
     act.Should().Throw<ArgumentException>();
   }
@@ -38,7 +38,7 @@ public sealed class ResultTests
   [Fact]
   public void should_expose_value_when_generic_success()
   {
-    var result = Result.Success(42);
+    Result<int> result = Result.Success(42);
 
     result.IsSuccess.Should().BeTrue();
     result.Value.Should().Be(42);
@@ -47,10 +47,10 @@ public sealed class ResultTests
   [Fact]
   public void should_throw_when_value_accessed_on_generic_failure()
   {
-    var result = Result.Failure<int>(SomeError);
+    Result<int> result = Result.Failure<int>(SomeError);
 
     result.IsFailure.Should().BeTrue();
-    var act = () => result.Value;
+    Func<int> act = () => result.Value;
     act.Should().Throw<InvalidOperationException>();
   }
 
@@ -66,7 +66,7 @@ public sealed class ResultTests
   [Fact]
   public void should_throw_when_generic_failure_created_without_error()
   {
-    var act = () => Result.Failure<int>(Error.None);
+    Func<Result<int>> act = () => Result.Failure<int>(Error.None);
 
     act.Should().Throw<ArgumentException>();
   }

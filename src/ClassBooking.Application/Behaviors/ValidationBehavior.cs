@@ -2,6 +2,7 @@ using System.Text.Json;
 using ClassBooking.Application.Common;
 using ClassBooking.Domain.Common;
 using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 
 namespace ClassBooking.Application.Behaviors;
@@ -21,11 +22,11 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValid
       return await next(cancellationToken);
     }
 
-    var context = new ValidationContext<TRequest>(request);
-    var validationResults = await Task.WhenAll(
+    ValidationContext<TRequest> context = new ValidationContext<TRequest>(request);
+    ValidationResult[] validationResults = await Task.WhenAll(
         validators.Select(validator => validator.ValidateAsync(context, cancellationToken)));
 
-    var failures = validationResults
+    ValidationFailure[] failures = validationResults
         .SelectMany(validationResult => validationResult.Errors)
         .ToArray();
 
@@ -34,7 +35,7 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValid
       return await next(cancellationToken);
     }
 
-    var errors = failures
+    Dictionary<string, string[]> errors = failures
         .GroupBy(failure => JsonNamingPolicy.CamelCase.ConvertName(failure.PropertyName))
         .ToDictionary(group => group.Key, group => group.Select(failure => failure.ErrorMessage).Distinct().ToArray());
 

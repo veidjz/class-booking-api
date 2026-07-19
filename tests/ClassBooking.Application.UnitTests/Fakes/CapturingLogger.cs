@@ -27,7 +27,7 @@ internal sealed class CapturingLogger<T> : ILogger<T>
       Exception? exception,
       Func<TState, Exception?, string> formatter)
   {
-    var properties = state as IReadOnlyList<KeyValuePair<string, object?>> ?? [];
+    IReadOnlyList<KeyValuePair<string, object?>> properties = state as IReadOnlyList<KeyValuePair<string, object?>> ?? [];
     _entries.Add(new LogEntry(logLevel, formatter(state, exception), properties.ToDictionary()));
   }
 

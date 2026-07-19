@@ -16,9 +16,9 @@ internal sealed class UnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOf
       RequestHandlerDelegate<TResponse> next,
       CancellationToken cancellationToken)
   {
-    await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
+    await using IUnitOfWorkTransaction transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
 
-    var response = await next(cancellationToken);
+    TResponse response = await next(cancellationToken);
     if (response.IsFailure)
     {
       return response;
@@ -26,7 +26,7 @@ internal sealed class UnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOf
 
     await PublishDomainEventsAsync(cancellationToken);
 
-    var saveResult = await unitOfWork.SaveChangesAsync(cancellationToken);
+    Result saveResult = await unitOfWork.SaveChangesAsync(cancellationToken);
     if (saveResult.IsFailure)
     {
       return ResultFactory.Failure<TResponse>(saveResult.Error);
@@ -38,10 +38,10 @@ internal sealed class UnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOf
 
   private async Task PublishDomainEventsAsync(CancellationToken cancellationToken)
   {
-    var domainEvents = unitOfWork.DequeueDomainEvents();
+    IReadOnlyCollection<IDomainEvent> domainEvents = unitOfWork.DequeueDomainEvents();
     while (domainEvents.Count > 0)
     {
-      foreach (var domainEvent in domainEvents)
+      foreach (IDomainEvent domainEvent in domainEvents)
       {
         await publisher.Publish(domainEvent, cancellationToken);
       }

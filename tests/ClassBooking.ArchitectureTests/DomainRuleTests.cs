@@ -9,7 +9,7 @@ public sealed class DomainRuleTests
   [Fact]
   public void Domain_should_reference_only_bcl_and_mediatr_contracts()
   {
-    var forbidden = Domain.GetReferencedAssemblies()
+    string[] forbidden = Domain.GetReferencedAssemblies()
         .Select(reference => reference.Name!)
         .Where(name => name != "MediatR.Contracts"
             && name != "netstandard"
@@ -23,7 +23,7 @@ public sealed class DomainRuleTests
   [Fact]
   public void Domain_should_not_define_exception_types()
   {
-    var exceptionTypes = Domain.GetTypes()
+    string?[] exceptionTypes = Domain.GetTypes()
         .Where(type => typeof(Exception).IsAssignableFrom(type))
         .Select(type => type.FullName)
         .ToArray();

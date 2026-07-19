@@ -28,9 +28,9 @@ public sealed class ValidationBehaviorTests
   [Fact]
   public async Task should_invoke_handler_when_no_validators_registered()
   {
-    var behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([]);
+    ValidationBehavior<RegisterCommand, Result<Guid>> behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([]);
 
-    var response = await behavior.Handle(new RegisterCommand("ana@example.com", "Ana"), Handler, CancellationToken.None);
+    Result<Guid> response = await behavior.Handle(new RegisterCommand("ana@example.com", "Ana"), Handler, CancellationToken.None);
 
     response.IsSuccess.Should().BeTrue();
     response.Value.Should().Be(UserId);
@@ -39,9 +39,9 @@ public sealed class ValidationBehaviorTests
   [Fact]
   public async Task should_invoke_handler_when_request_is_valid()
   {
-    var behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator(), new FullNameValidator()]);
+    ValidationBehavior<RegisterCommand, Result<Guid>> behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator(), new FullNameValidator()]);
 
-    var response = await behavior.Handle(new RegisterCommand("ana@example.com", "Ana"), Handler, CancellationToken.None);
+    Result<Guid> response = await behavior.Handle(new RegisterCommand("ana@example.com", "Ana"), Handler, CancellationToken.None);
 
     response.IsSuccess.Should().BeTrue();
   }
@@ -49,10 +49,10 @@ public sealed class ValidationBehaviorTests
   [Fact]
   public async Task should_short_circuit_with_validation_error_when_request_is_invalid()
   {
-    var handlerInvoked = false;
-    var behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator()]);
+    bool handlerInvoked = false;
+    ValidationBehavior<RegisterCommand, Result<Guid>> behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator()]);
 
-    var response = await behavior.Handle(
+    Result<Guid> response = await behavior.Handle(
         new RegisterCommand(string.Empty, "Ana"),
         _ =>
         {
@@ -69,11 +69,11 @@ public sealed class ValidationBehaviorTests
   [Fact]
   public async Task should_group_messages_by_camel_case_field_when_multiple_validators_fail()
   {
-    var behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator(), new FullNameValidator()]);
+    ValidationBehavior<RegisterCommand, Result<Guid>> behavior = new ValidationBehavior<RegisterCommand, Result<Guid>>([new EmailValidator(), new FullNameValidator()]);
 
-    var response = await behavior.Handle(new RegisterCommand(string.Empty, string.Empty), Handler, CancellationToken.None);
+    Result<Guid> response = await behavior.Handle(new RegisterCommand(string.Empty, string.Empty), Handler, CancellationToken.None);
 
-    var validationError = response.Error.Should().BeOfType<ValidationError>().Subject;
+    ValidationError validationError = response.Error.Should().BeOfType<ValidationError>().Subject;
     validationError.Errors.Should().ContainKey("email").WhoseValue.Should().Equal("Email is required.");
     validationError.Errors.Should().ContainKey("fullName").WhoseValue.Should().Equal("Full name is required.");
   }
@@ -81,10 +81,10 @@ public sealed class ValidationBehaviorTests
   [Fact]
   public async Task should_fail_with_validation_error_when_response_is_non_generic_result()
   {
-    var deactivate = new DeactivateCommand(string.Empty);
-    var behavior = new ValidationBehavior<DeactivateCommand, Result>([new DeactivateValidator()]);
+    DeactivateCommand deactivate = new DeactivateCommand(string.Empty);
+    ValidationBehavior<DeactivateCommand, Result> behavior = new ValidationBehavior<DeactivateCommand, Result>([new DeactivateValidator()]);
 
-    var response = await behavior.Handle(deactivate, _ => Task.FromResult(Result.Success()), CancellationToken.None);
+    Result response = await behavior.Handle(deactivate, _ => Task.FromResult(Result.Success()), CancellationToken.None);
 
     response.IsFailure.Should().BeTrue();
     response.Error.Should().BeOfType<ValidationError>();

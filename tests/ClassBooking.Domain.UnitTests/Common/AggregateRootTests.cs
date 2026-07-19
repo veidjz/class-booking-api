@@ -15,7 +15,7 @@ public sealed class AggregateRootTests
   [Fact]
   public void should_have_no_domain_events_when_created()
   {
-    var aggregate = new SampleAggregate(Guid.CreateVersion7());
+    SampleAggregate aggregate = new SampleAggregate(Guid.CreateVersion7());
 
     aggregate.DomainEvents.Should().BeEmpty();
   }
@@ -23,7 +23,7 @@ public sealed class AggregateRootTests
   [Fact]
   public void should_accumulate_domain_events_when_raised()
   {
-    var aggregate = new SampleAggregate(Guid.CreateVersion7());
+    SampleAggregate aggregate = new SampleAggregate(Guid.CreateVersion7());
 
     aggregate.DoSomething();
     aggregate.DoSomething();
@@ -35,7 +35,7 @@ public sealed class AggregateRootTests
   [Fact]
   public void should_have_no_domain_events_when_cleared()
   {
-    var aggregate = new SampleAggregate(Guid.CreateVersion7());
+    SampleAggregate aggregate = new SampleAggregate(Guid.CreateVersion7());
     aggregate.DoSomething();
 
     aggregate.ClearDomainEvents();

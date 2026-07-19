@@ -5,7 +5,7 @@ using ClassBooking.Domain.Common;
 using ClassBooking.Infrastructure;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -13,7 +13,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
 

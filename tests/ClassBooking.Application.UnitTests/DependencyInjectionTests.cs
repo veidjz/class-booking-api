@@ -17,7 +17,7 @@ public sealed class DependencyInjectionTests
 
   private static ServiceProvider BuildProvider()
   {
-    var services = new ServiceCollection();
+    ServiceCollection services = new ServiceCollection();
     services.AddLogging();
     services.AddSingleton(Substitute.For<IUnitOfWork>());
     services.AddApplication();
@@ -27,9 +27,9 @@ public sealed class DependencyInjectionTests
   [Fact]
   public void should_register_behaviors_in_pipeline_order_when_application_added()
   {
-    using var provider = BuildProvider();
+    using ServiceProvider provider = BuildProvider();
 
-    var behaviors = provider.GetServices<IPipelineBehavior<PingCommand, Result>>()
+    Type[] behaviors = provider.GetServices<IPipelineBehavior<PingCommand, Result>>()
         .Select(behavior => behavior.GetType().GetGenericTypeDefinition())
         .ToArray();
 
@@ -42,9 +42,9 @@ public sealed class DependencyInjectionTests
   [Fact]
   public void should_not_apply_unit_of_work_behavior_to_queries()
   {
-    using var provider = BuildProvider();
+    using ServiceProvider provider = BuildProvider();
 
-    var behaviors = provider.GetServices<IPipelineBehavior<PingQuery, Result<int>>>()
+    Type[] behaviors = provider.GetServices<IPipelineBehavior<PingQuery, Result<int>>>()
         .Select(behavior => behavior.GetType().GetGenericTypeDefinition())
         .ToArray();
 
@@ -56,7 +56,7 @@ public sealed class DependencyInjectionTests
   [Fact]
   public void should_register_system_time_provider_when_none_registered()
   {
-    using var provider = BuildProvider();
+    using ServiceProvider provider = BuildProvider();
 
     provider.GetRequiredService<TimeProvider>().Should().BeSameAs(TimeProvider.System);
   }
@@ -64,11 +64,11 @@ public sealed class DependencyInjectionTests
   [Fact]
   public void should_keep_existing_time_provider_when_already_registered()
   {
-    var services = new ServiceCollection();
-    var existing = Substitute.ForPartsOf<TimeProvider>();
+    ServiceCollection services = new ServiceCollection();
+    TimeProvider existing = Substitute.ForPartsOf<TimeProvider>();
     services.AddSingleton(existing);
     services.AddApplication();
-    using var provider = services.BuildServiceProvider();
+    using ServiceProvider provider = services.BuildServiceProvider();
 
     provider.GetRequiredService<TimeProvider>().Should().BeSameAs(existing);
   }

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ClassBooking.Domain.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ClassBooking.Api.Errors;
 
@@ -12,7 +13,7 @@ internal static class ResultExtensions
       throw new InvalidOperationException("A success result cannot be mapped to a problem response.");
     }
 
-    var problemDetails = ProblemDetailsMapper.ToProblemDetails(
+    ProblemDetails problemDetails = ProblemDetailsMapper.ToProblemDetails(
         result.Error,
         httpContext.Request.Path,
         Activity.Current?.Id ?? httpContext.TraceIdentifier);

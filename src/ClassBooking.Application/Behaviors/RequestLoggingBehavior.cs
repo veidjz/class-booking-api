@@ -15,15 +15,15 @@ internal sealed class RequestLoggingBehavior<TRequest, TResponse>(
       RequestHandlerDelegate<TResponse> next,
       CancellationToken cancellationToken)
   {
-    var requestName = typeof(TRequest).Name;
-    using var scope = logger.BeginScope(new Dictionary<string, object> { ["RequestName"] = requestName });
+    string requestName = typeof(TRequest).Name;
+    using IDisposable? scope = logger.BeginScope(new Dictionary<string, object> { ["RequestName"] = requestName });
 
     logger.LogInformation("Handling {RequestName}", requestName);
-    var startTimestamp = clock.GetTimestamp();
+    long startTimestamp = clock.GetTimestamp();
 
-    var response = await next(cancellationToken);
+    TResponse response = await next(cancellationToken);
 
-    var elapsedMilliseconds = clock.GetElapsedTime(startTimestamp).TotalMilliseconds;
+    double elapsedMilliseconds = clock.GetElapsedTime(startTimestamp).TotalMilliseconds;
     if (response.IsSuccess)
     {
       logger.LogInformation(

@@ -8,7 +8,7 @@ public sealed class ErrorTests
   [Fact]
   public void should_expose_code_and_message()
   {
-    var error = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
+    Error error = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
 
     error.Code.Should().Be("SlotAlreadyBooked");
     error.Message.Should().Be("The slot already has an active booking.");
@@ -17,8 +17,8 @@ public sealed class ErrorTests
   [Fact]
   public void should_be_equal_when_code_and_message_match()
   {
-    var first = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
-    var second = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
+    Error first = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
+    Error second = new Error("SlotAlreadyBooked", "The slot already has an active booking.");
 
     first.Should().Be(second);
   }

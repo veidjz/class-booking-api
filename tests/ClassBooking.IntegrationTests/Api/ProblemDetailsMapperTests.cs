@@ -2,6 +2,7 @@ using ClassBooking.Api.Errors;
 using ClassBooking.Application.Common;
 using ClassBooking.Domain.Common;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ClassBooking.IntegrationTests.Api;
 
@@ -39,7 +40,7 @@ public sealed class ProblemDetailsMapperTests
   [InlineData("UnexpectedError", 500)]
   public void should_map_error_code_to_canonical_http_status(string errorCode, int expectedStatus)
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(new Error(errorCode, "Message."), null, null);
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(new Error(errorCode, "Message."), null, null);
 
     problem.Status.Should().Be(expectedStatus);
     problem.Extensions["errorCode"].Should().Be(errorCode);
@@ -48,7 +49,7 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_map_unknown_error_code_to_internal_server_error()
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(new Error("SomethingNew", "Message."), null, null);
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(new Error("SomethingNew", "Message."), null, null);
 
     problem.Status.Should().Be(500);
     problem.Extensions["errorCode"].Should().Be("SomethingNew");
@@ -57,7 +58,7 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_build_type_uri_with_kebab_case_code()
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(
         new Error("SlotAlreadyBooked", "The slot already has an active booking."), null, null);
 
     problem.Type.Should().Be("https://veidjz.github.io/class-booking-api/errors/slot-already-booked");
@@ -66,7 +67,7 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_humanize_code_into_title_and_use_message_as_detail()
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(
         new Error("SlotAlreadyBooked", "The slot already has an active booking."), null, null);
 
     problem.Title.Should().Be("Slot already booked");
@@ -76,7 +77,7 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_carry_instance_and_trace_id_when_provided()
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(
         new Error("PaymentDeclined", "The payment was declined."),
         "/api/v1/bookings/0198c0de-0000-7000-8000-000000000001/confirm",
         "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
@@ -88,7 +89,7 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_omit_trace_id_extension_when_absent()
   {
-    var problem = ProblemDetailsMapper.ToProblemDetails(new Error("PaymentDeclined", "Message."), null, null);
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(new Error("PaymentDeclined", "Message."), null, null);
 
     problem.Extensions.Should().NotContainKey("traceId");
   }
@@ -96,18 +97,18 @@ public sealed class ProblemDetailsMapperTests
   [Fact]
   public void should_expose_field_errors_when_error_is_validation_error()
   {
-    var validationError = new ValidationError(new Dictionary<string, string[]>
+    ValidationError validationError = new ValidationError(new Dictionary<string, string[]>
     {
       ["email"] = ["Email is required."],
       ["fullName"] = ["Full name is required."],
     });
 
-    var problem = ProblemDetailsMapper.ToProblemDetails(validationError, null, null);
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(validationError, null, null);
 
     problem.Status.Should().Be(400);
     problem.Title.Should().Be("Validation failed");
     problem.Detail.Should().Be("One or more validation errors occurred.");
-    var errors = problem.Extensions["errors"].Should()
+    IReadOnlyDictionary<string, string[]> errors = problem.Extensions["errors"].Should()
         .BeAssignableTo<IReadOnlyDictionary<string, string[]>>().Subject;
     errors.Should().ContainKey("email");
     errors.Should().ContainKey("fullName");

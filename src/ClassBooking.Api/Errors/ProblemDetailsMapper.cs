@@ -45,9 +45,9 @@ internal static class ProblemDetailsMapper
 
   internal static ProblemDetails ToProblemDetails(Error error, string? instance, string? traceId)
   {
-    var status = StatusByCode.GetValueOrDefault(error.Code, StatusCodes.Status500InternalServerError);
+    int status = StatusByCode.GetValueOrDefault(error.Code, StatusCodes.Status500InternalServerError);
 
-    var problemDetails = new ProblemDetails
+    ProblemDetails problemDetails = new ProblemDetails
     {
       Type = TypeUriPrefix + ToKebabCase(error.Code),
       Title = ToTitle(error.Code),
@@ -77,17 +77,17 @@ internal static class ProblemDetailsMapper
 
   private static string ConvertCode(string code, char separator, bool lowerFirstWordOnly)
   {
-    var builder = new StringBuilder(code.Length + 8);
+    StringBuilder builder = new StringBuilder(code.Length + 8);
 
-    for (var index = 0; index < code.Length; index++)
+    for (int index = 0; index < code.Length; index++)
     {
-      var character = code[index];
+      char character = code[index];
       if (char.IsUpper(character) && index > 0)
       {
         builder.Append(separator);
       }
 
-      var keepUpper = lowerFirstWordOnly && index == 0;
+      bool keepUpper = lowerFirstWordOnly && index == 0;
       builder.Append(keepUpper ? character : char.ToLowerInvariant(character));
     }
 

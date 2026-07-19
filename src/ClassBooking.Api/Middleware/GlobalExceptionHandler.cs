@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ClassBooking.Api.Errors;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ClassBooking.Api.Middleware;
 
@@ -13,7 +14,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
   {
     logger.LogError(exception, "Unhandled exception for {RequestPath}", httpContext.Request.Path);
 
-    var problemDetails = ProblemDetailsMapper.ToProblemDetails(
+    ProblemDetails problemDetails = ProblemDetailsMapper.ToProblemDetails(
         TransportErrors.UnexpectedError,
         httpContext.Request.Path,
         Activity.Current?.Id ?? httpContext.TraceIdentifier);

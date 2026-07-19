@@ -21,8 +21,8 @@ internal static class ResultFactory
         return error => (TResult)Result.Failure(error);
       }
 
-      var valueType = typeof(TResult).GetGenericArguments().Single();
-      var failure = typeof(Result)
+      Type valueType = typeof(TResult).GetGenericArguments().Single();
+      MethodInfo failure = typeof(Result)
           .GetMethods(BindingFlags.Public | BindingFlags.Static)
           .Single(method => method.Name == nameof(Result.Failure) && method.IsGenericMethodDefinition)
           .MakeGenericMethod(valueType);
