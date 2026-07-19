@@ -20,6 +20,12 @@ internal sealed class SubtypeForeignKeyConvention : IModelFinalizingConvention
           continue;
         }
 
+        IConventionKey? primaryKey = entityType.FindPrimaryKey();
+        if (primaryKey is null || !foreignKey.Properties.SequenceEqual(primaryKey.Properties))
+        {
+          continue;
+        }
+
         string table = entityType.GetTableName()!;
         string principalTable = foreignKey.PrincipalEntityType.GetTableName()!;
 
