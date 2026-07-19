@@ -38,13 +38,16 @@ internal sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
 
       return Result.Success();
     }
-    catch (DbUpdateException exception) when (exception.InnerException is MySqlException { Number: 1062 } duplicate)
+    catch (DbUpdateException exception)
+        when (exception.InnerException is MySqlException { ErrorCode: MySqlErrorCode.DuplicateKeyEntry } duplicate)
     {
       Error? error = MySqlErrorTranslator.TranslateDuplicateKey(duplicate.Message);
       if (error is null)
       {
         throw;
       }
+
+      context.ChangeTracker.Clear();
 
       return Result.Failure(error);
     }
