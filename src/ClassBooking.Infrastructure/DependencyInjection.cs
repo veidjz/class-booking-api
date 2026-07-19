@@ -26,6 +26,7 @@ public static class DependencyInjection
             .AddInterceptors(serviceProvider.GetRequiredService<VersionTokenInterceptor>()));
 
     services.AddScoped<IAppDbContext>(serviceProvider => serviceProvider.GetRequiredService<AppDbContext>());
+    services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     return services;
   }
