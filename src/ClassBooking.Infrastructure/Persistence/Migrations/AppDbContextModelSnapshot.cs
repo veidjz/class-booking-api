@@ -24,12 +24,12 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("ClassBooking.Domain.Users.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<byte[]>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
+                        .HasColumnType("binary(16)")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
@@ -52,8 +52,10 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("password_hash");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int")
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
                         .HasColumnName("role");
 
                     b.HasKey("Id")
