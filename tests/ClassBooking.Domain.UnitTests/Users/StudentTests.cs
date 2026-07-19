@@ -21,13 +21,36 @@ public sealed class StudentTests
   }
 
   [Fact]
-  public void should_identify_the_student_with_a_time_ordered_uuid_when_registered()
+  public void should_derive_the_identity_from_the_creation_instant_when_registered()
+  {
+    Student student = Student.Register("Ana Souza", "ana.souza@example.com", "hash", CreatedAt);
+
+    student.Id.Version.Should().Be(7);
+    Timestamp(student.Id).Should().Be(CreatedAt.ToUnixTimeMilliseconds());
+  }
+
+  [Fact]
+  public void should_identify_students_with_time_ordered_uuids_when_registered_in_sequence()
   {
     Student first = Student.Register("Ana Souza", "ana.souza@example.com", "hash", CreatedAt);
-    Student second = Student.Register("Bruno Dias", "bruno.dias@example.com", "hash", CreatedAt);
+    Student second = Student.Register("Bruno Dias", "bruno.dias@example.com", "hash", CreatedAt.AddSeconds(1));
 
-    first.Id.Version.Should().Be(7);
     second.Id.Should().NotBe(first.Id);
+    first.Id.ToByteArray(bigEndian: true).AsSpan()
+        .SequenceCompareTo(second.Id.ToByteArray(bigEndian: true))
+        .Should().BeNegative();
+  }
+
+  private static long Timestamp(Guid id)
+  {
+    byte[] bytes = id.ToByteArray(bigEndian: true);
+
+    return ((long)bytes[0] << 40)
+        | ((long)bytes[1] << 32)
+        | ((long)bytes[2] << 24)
+        | ((long)bytes[3] << 16)
+        | ((long)bytes[4] << 8)
+        | bytes[5];
   }
 
   [Fact]
