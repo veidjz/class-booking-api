@@ -33,6 +33,9 @@ public class User : AggregateRoot
 
   public DateTimeOffset CreatedAt { get; }
 
+  public static User CreateAdmin(string name, string email, string passwordHash, DateTimeOffset createdAt) =>
+      new User(Guid.CreateVersion7(createdAt), name, email, passwordHash, UserRole.Admin, createdAt);
+
   public bool Activate(DateTimeOffset occurredAt)
   {
     if (IsActive)
