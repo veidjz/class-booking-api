@@ -64,6 +64,26 @@ public sealed class ProblemDetailsMapperTests
     problem.Type.Should().Be("https://veidjz.github.io/class-booking-api/errors/slot-already-booked");
   }
 
+  [Theory]
+  [InlineData("HTTPError", "http-error")]
+  [InlineData("URLInvalid", "url-invalid")]
+  [InlineData("APIRequestFailed", "api-request-failed")]
+  [InlineData("JWTExpired", "jwt-expired")]
+  public void should_keep_acronyms_whole_in_type_uri(string errorCode, string expectedSlug)
+  {
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(new Error(errorCode, "Message."), null, null);
+
+    problem.Type.Should().Be("https://veidjz.github.io/class-booking-api/errors/" + expectedSlug);
+  }
+
+  [Fact]
+  public void should_keep_acronyms_whole_in_title()
+  {
+    ProblemDetails problem = ProblemDetailsMapper.ToProblemDetails(new Error("APIRequestFailed", "Message."), null, null);
+
+    problem.Title.Should().Be("Api request failed");
+  }
+
   [Fact]
   public void should_humanize_code_into_title_and_use_message_as_detail()
   {

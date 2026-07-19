@@ -82,7 +82,7 @@ internal static class ProblemDetailsMapper
     for (int index = 0; index < code.Length; index++)
     {
       char character = code[index];
-      if (char.IsUpper(character) && index > 0)
+      if (index > 0 && char.IsUpper(character) && StartsNewWord(code, index))
       {
         builder.Append(separator);
       }
@@ -93,4 +93,8 @@ internal static class ProblemDetailsMapper
 
     return builder.ToString();
   }
+
+  private static bool StartsNewWord(string code, int index) =>
+      char.IsLower(code[index - 1])
+      || (index + 1 < code.Length && char.IsLower(code[index + 1]));
 }
