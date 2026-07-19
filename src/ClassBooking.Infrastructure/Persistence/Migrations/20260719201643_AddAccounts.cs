@@ -19,16 +19,17 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     id = table.Column<byte[]>(type: "binary(16)", nullable: false),
-                    name = table.Column<string>(type: "longtext", nullable: false)
+                    name = table.Column<string>(type: "varchar(120)", maxLength: 120, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    email = table.Column<string>(type: "longtext", nullable: false)
+                    email = table.Column<string>(type: "varchar(254)", maxLength: 254, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    password_hash = table.Column<string>(type: "longtext", nullable: false)
+                    password_hash = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     role = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    is_active = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    is_active = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: true),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    version = table.Column<int>(type: "int", nullable: false, defaultValue: 0)
                 },
                 constraints: table =>
                 {
@@ -59,9 +60,9 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     id = table.Column<byte[]>(type: "binary(16)", nullable: false),
-                    cancellation_count = table.Column<int>(type: "int", nullable: false),
-                    late_cancellation_count = table.Column<int>(type: "int", nullable: false),
-                    no_show_count = table.Column<int>(type: "int", nullable: false)
+                    cancellation_count = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    late_cancellation_count = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    no_show_count = table.Column<int>(type: "int", nullable: false, defaultValue: 0)
                 },
                 constraints: table =>
                 {

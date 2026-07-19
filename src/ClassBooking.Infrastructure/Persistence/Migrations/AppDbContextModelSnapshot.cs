@@ -35,21 +35,26 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)")
                         .HasColumnName("email");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true)
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
                         .HasColumnName("name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("Role")
@@ -57,6 +62,13 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)")
                         .HasColumnName("role");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("version");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
@@ -78,15 +90,21 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasBaseType("ClassBooking.Domain.Users.User");
 
                     b.Property<int>("CancellationCount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
+                        .HasDefaultValue(0)
                         .HasColumnName("cancellation_count");
 
                     b.Property<int>("LateCancellationCount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
+                        .HasDefaultValue(0)
                         .HasColumnName("late_cancellation_count");
 
                     b.Property<int>("NoShowCount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
+                        .HasDefaultValue(0)
                         .HasColumnName("no_show_count");
 
                     b.ToTable("teachers", (string)null);
