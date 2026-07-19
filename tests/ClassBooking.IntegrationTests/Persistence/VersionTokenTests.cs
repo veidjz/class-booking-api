@@ -1,6 +1,7 @@
 using ClassBooking.Domain.Users;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
+using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +42,28 @@ public sealed class VersionTokenTests(ContainersFixture fixture) : DatabaseTestB
 
     version.Should().Be(1);
     noShowCount.Should().Be(1);
+  }
+
+  [Fact]
+  public async Task should_guard_the_version_in_every_update_issued_by_a_captured_context()
+  {
+    await AddAsync(User.CreateAdmin("Root", "root@classbooking.dev", "hash", CreatedAt));
+
+    (AppDbContext context, CapturingCommandInterceptor interceptor) = CreateCapturingContext();
+    await using (context)
+    {
+      User user = await context.Users.SingleAsync();
+      user.Deactivate(CreatedAt);
+      await context.SaveChangesAsync();
+    }
+
+    string update = interceptor.Commands
+        .Should().ContainSingle(command => command.Contains("UPDATE `users`", StringComparison.Ordinal))
+        .Subject;
+    int where = update.IndexOf("WHERE", StringComparison.Ordinal);
+
+    update[..where].Should().Contain("`version`");
+    update[where..].Should().Contain("`version`");
   }
 
   [Fact]
