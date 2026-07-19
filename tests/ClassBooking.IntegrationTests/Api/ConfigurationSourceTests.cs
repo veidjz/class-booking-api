@@ -12,7 +12,7 @@ public sealed class ConfigurationSourceTests
 {
   private const string PrefixedVariable = "CLASSBOOKING_ConnectionStrings__Database";
   private const string PrefixedValue = "Server=prefixed;Database=classbooking;User Id=classbooking;Password=classbooking";
-  private const string LocalValue = "Server=localhost;Database=classbooking;User Id=classbooking;Password=classbooking";
+  private const string LocalValue = "Server=localhost;Port=3306;Database=classbooking;User Id=classbooking;Password=classbooking";
 
   [Fact]
   public void should_read_the_connection_string_from_the_prefixed_environment_variable()
@@ -54,7 +54,8 @@ public sealed class ConfigurationSourceTests
   [Fact]
   public void should_keep_the_local_connection_string_out_of_the_base_settings_file()
   {
-    using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>();
+    using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()
+        .WithWebHostBuilder(builder => builder.UseEnvironment("Production"));
 
     Func<IServiceProvider> build = () => factory.Services;
 
