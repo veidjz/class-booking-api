@@ -8,7 +8,7 @@ namespace ClassBooking.Api.Errors;
 
 internal static class ProblemDetailsMapper
 {
-  private const string TypeUriPrefix = "https://classbooking.dev/errors/";
+  private const string TypeUriPrefix = "https://veidjz.github.io/class-booking-api/errors/";
 
   private static readonly FrozenDictionary<string, int> StatusByCode = new Dictionary<string, int>
   {

@@ -60,7 +60,7 @@ public sealed class ProblemDetailsMapperTests
     var problem = ProblemDetailsMapper.ToProblemDetails(
         new Error("SlotAlreadyBooked", "The slot already has an active booking."), null, null);
 
-    problem.Type.Should().Be("https://classbooking.dev/errors/slot-already-booked");
+    problem.Type.Should().Be("https://veidjz.github.io/class-booking-api/errors/slot-already-booked");
   }
 
   [Fact]
