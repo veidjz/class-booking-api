@@ -1,6 +1,8 @@
 using ClassBooking.Application.Abstractions.Data;
+using ClassBooking.Domain.Users;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.Infrastructure.Persistence.Interceptors;
+using ClassBooking.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,7 @@ public static class DependencyInjection
 
     services.AddScoped<IAppDbContext>(serviceProvider => serviceProvider.GetRequiredService<AppDbContext>());
     services.AddScoped<IUnitOfWork, UnitOfWork>();
+    services.AddScoped<IUserRepository, UserRepository>();
 
     return services;
   }
