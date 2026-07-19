@@ -12,7 +12,7 @@ internal sealed class UserRepository(AppDbContext context) : IUserRepository
       context.Users.FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
 
   public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken) =>
-      context.Users.AsNoTracking().AnyAsync(user => user.Email == email, cancellationToken);
+      context.Users.AnyAsync(user => user.Email == email, cancellationToken);
 
   public void Add(User user) => context.Users.Add(user);
 }
