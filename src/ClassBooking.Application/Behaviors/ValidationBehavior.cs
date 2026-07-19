@@ -22,9 +22,9 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValid
       return await next(cancellationToken);
     }
 
-    ValidationContext<TRequest> context = new ValidationContext<TRequest>(request);
     ValidationResult[] validationResults = await Task.WhenAll(
-        validators.Select(validator => validator.ValidateAsync(context, cancellationToken)));
+        validators.Select(validator =>
+            validator.ValidateAsync(new ValidationContext<TRequest>(request), cancellationToken)));
 
     ValidationFailure[] failures = validationResults
         .SelectMany(validationResult => validationResult.Errors)
