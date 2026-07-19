@@ -28,9 +28,10 @@ public abstract class DatabaseTestBase(ContainersFixture fixture) : IAsyncLifeti
   protected (AppDbContext Context, CapturingCommandInterceptor Interceptor) CreateCapturingContext()
   {
     CapturingCommandInterceptor interceptor = new CapturingCommandInterceptor();
-    DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
-        .UseMySql(Fixture.ConnectionString, new MySqlServerVersion(new Version(8, 4, 0)))
-        .UseSnakeCaseNamingConvention()
+    using IServiceScope scope = CreateScope();
+    DbContextOptions<AppDbContext> composed =
+        scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>();
+    DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>(composed)
         .AddInterceptors(interceptor)
         .Options;
 
