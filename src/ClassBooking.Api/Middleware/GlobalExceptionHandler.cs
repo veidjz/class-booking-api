@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClassBooking.Api.Middleware;
 
-internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+internal sealed class GlobalExceptionHandler(
+    ILogger<GlobalExceptionHandler> logger,
+    IProblemDetailsService problemDetailsService) : IExceptionHandler
 {
   public async ValueTask<bool> TryHandleAsync(
       HttpContext httpContext,
@@ -20,12 +22,11 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
         Activity.Current?.Id ?? httpContext.TraceIdentifier);
 
     httpContext.Response.StatusCode = problemDetails.Status!.Value;
-    await httpContext.Response.WriteAsJsonAsync(
-        problemDetails,
-        options: null,
-        contentType: "application/problem+json",
-        cancellationToken: cancellationToken);
 
-    return true;
+    return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+    {
+      HttpContext = httpContext,
+      ProblemDetails = problemDetails,
+    });
   }
 }
