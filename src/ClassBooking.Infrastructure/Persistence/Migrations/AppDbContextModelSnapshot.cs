@@ -73,6 +73,10 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ux_users_email");
+
                     b.ToTable("users", (string)null);
 
                     b.UseTptMappingStrategy();
@@ -107,7 +111,10 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("no_show_count");
 
-                    b.ToTable("teachers", (string)null);
+                    b.ToTable("teachers", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_teachers_counters", "cancellation_count >= 0 AND late_cancellation_count >= 0 AND no_show_count >= 0");
+                        });
                 });
 
             modelBuilder.Entity("ClassBooking.Domain.Users.Student", b =>

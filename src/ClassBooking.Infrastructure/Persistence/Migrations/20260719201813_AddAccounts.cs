@@ -47,11 +47,10 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("pk_users", x => x.id);
                     table.ForeignKey(
-                        name: "fk_students_users_id",
+                        name: "fk_students_users",
                         column: x => x.id,
                         principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -67,14 +66,20 @@ namespace ClassBooking.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_users", x => x.id);
+                    table.CheckConstraint("chk_teachers_counters", "cancellation_count >= 0 AND late_cancellation_count >= 0 AND no_show_count >= 0");
                     table.ForeignKey(
-                        name: "fk_teachers_users_id",
+                        name: "fk_teachers_users",
                         column: x => x.id,
                         principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateIndex(
+                name: "ux_users_email",
+                table: "users",
+                column: "email",
+                unique: true);
         }
 
         /// <inheritdoc />
