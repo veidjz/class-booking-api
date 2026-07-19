@@ -24,6 +24,24 @@ public sealed class ValueConversionTests(ContainersFixture fixture) : DatabaseTe
   }
 
   [Fact]
+  public async Task should_write_the_identity_the_application_assigned()
+  {
+    Student student = Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt);
+
+    using (IServiceScope scope = CreateScope())
+    {
+      AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+      context.Users.Add(student);
+      context.Entry(student).Property(user => user.Id).CurrentValue = Guid.Empty;
+      await context.SaveChangesAsync();
+    }
+
+    string? storedId = await ScalarAsync<string>("SELECT HEX(id) FROM users");
+
+    storedId.Should().Be("00000000000000000000000000000000");
+  }
+
+  [Fact]
   public async Task should_declare_the_identity_column_as_binary_16()
   {
     IReadOnlyList<(string Table, string DataType, long Length)> columns = await QueryAsync(
