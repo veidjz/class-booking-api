@@ -1,5 +1,7 @@
 using ClassBooking.Domain.Users;
 using ClassBooking.Infrastructure.Persistence;
+using ClassBooking.IntegrationTests.Support;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MySqlConnector;
 
@@ -21,6 +23,18 @@ public abstract class DatabaseTestBase(ContainersFixture fixture) : IAsyncLifeti
     AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Users.AddRange(users);
     await context.SaveChangesAsync();
+  }
+
+  protected (AppDbContext Context, CapturingCommandInterceptor Interceptor) CreateCapturingContext()
+  {
+    CapturingCommandInterceptor interceptor = new CapturingCommandInterceptor();
+    DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
+        .UseMySql(Fixture.ConnectionString, new MySqlServerVersion(new Version(8, 4, 0)))
+        .UseSnakeCaseNamingConvention()
+        .AddInterceptors(interceptor)
+        .Options;
+
+    return (new AppDbContext(options), interceptor);
   }
 
   protected async Task<TValue?> ScalarAsync<TValue>(string sql)
