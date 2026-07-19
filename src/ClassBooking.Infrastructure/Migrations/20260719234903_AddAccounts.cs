@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ClassBooking.Infrastructure.Persistence.Migrations
+namespace ClassBooking.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddAccounts : Migration

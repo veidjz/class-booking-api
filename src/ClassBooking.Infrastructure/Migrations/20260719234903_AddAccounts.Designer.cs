@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ClassBooking.Infrastructure.Persistence.Migrations
+namespace ClassBooking.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260719205147_AddAccounts")]
+    [Migration("20260719234903_AddAccounts")]
     partial class AddAccounts
     {
         /// <inheritdoc />
