@@ -12,8 +12,6 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    env:
-      DOTNET_ROLL_FORWARD: Major
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +39,8 @@ jobs:
         run: dotnet build ClassBooking.slnx -c Release --no-restore
 
       - name: Gate migrations against the model
+        env:
+          DOTNET_ROLL_FORWARD: Major
         run: >
           dotnet ef migrations has-pending-model-changes
           --project src/ClassBooking.Infrastructure
@@ -48,6 +48,8 @@ jobs:
           --configuration Release --no-build
 
       - name: Script migrations
+        env:
+          DOTNET_ROLL_FORWARD: Major
         run: >
           dotnet ef migrations script --idempotent
           --project src/ClassBooking.Infrastructure
@@ -75,8 +77,14 @@ jobs:
 
       - name: Keep SaveChanges inside the unit of work
         run: |
-          if grep -rEn '\.SaveChanges(Async)?\(' src/ClassBooking.Infrastructure --include=*.cs | grep -v 'Persistence/UnitOfWork.cs'; then
+          if grep -rEn '\.SaveChanges(Async)?\(' src --include=*.cs | grep -vE 'Persistence/UnitOfWork\.cs|Behaviors/UnitOfWorkBehavior\.cs'; then
             echo "SaveChanges outside the unit of work"; exit 1
+          fi
+
+      - name: Forbid ambient clocks in production code
+        run: |
+          if grep -rEn 'DateTime(Offset)?\.(UtcNow|Now|Today)' src --include=*.cs; then
+            echo "ambient clock found, take the instant from TimeProvider"; exit 1
           fi
 
       - name: Test domain
