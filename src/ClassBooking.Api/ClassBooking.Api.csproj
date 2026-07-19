@@ -16,4 +16,8 @@
     <ProjectReference Include="..\ClassBooking.Infrastructure\ClassBooking.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ClassBooking.IntegrationTests" />
+  </ItemGroup>
+
 </Project>
