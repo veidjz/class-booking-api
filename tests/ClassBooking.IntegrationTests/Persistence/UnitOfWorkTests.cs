@@ -51,7 +51,26 @@ public sealed class UnitOfWorkTests(ContainersFixture fixture) : DatabaseTestBas
   }
 
   [Fact]
-  public async Task should_dequeue_domain_events_once()
+  public async Task should_persist_when_the_transaction_is_committed()
+  {
+    using (IServiceScope scope = CreateScope())
+    {
+      AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+      IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+      await using IUnitOfWorkTransaction transaction = await unitOfWork.BeginTransactionAsync(default);
+      context.Users.Add(Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt));
+      await unitOfWork.SaveChangesAsync(default);
+      await transaction.CommitAsync(default);
+    }
+
+    long users = await ScalarAsync<long>("SELECT COUNT(*) FROM users");
+
+    users.Should().Be(1);
+  }
+
+  [Fact]
+  public void should_dequeue_domain_events_once()
   {
     using IServiceScope scope = CreateScope();
     AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -64,7 +83,5 @@ public sealed class UnitOfWorkTests(ContainersFixture fixture) : DatabaseTestBas
 
     first.Should().ContainSingle().Which.Should().BeOfType<StudentRegisteredDomainEvent>();
     second.Should().BeEmpty();
-
-    await Task.CompletedTask;
   }
 }

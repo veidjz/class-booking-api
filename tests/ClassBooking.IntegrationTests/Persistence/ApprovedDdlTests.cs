@@ -70,7 +70,7 @@ public sealed class ApprovedDdlTests(ContainersFixture fixture) : DatabaseTestBa
   }
 
   [Fact]
-  public async Task should_write_the_version_column_in_the_insert_statement()
+  public async Task should_leave_the_version_column_to_the_database_default_on_insert()
   {
     (AppDbContext context, CapturingCommandInterceptor interceptor) = CreateCapturingContext();
     await using (context)
@@ -79,9 +79,10 @@ public sealed class ApprovedDdlTests(ContainersFixture fixture) : DatabaseTestBa
       await context.SaveChangesAsync();
     }
 
-    string insert = interceptor.Commands.Should().ContainSingle(command => command.Contains("INSERT INTO `users`")).Subject;
+    long version = await ScalarAsync<long>("SELECT version FROM users");
 
-    insert.Should().Contain("version");
+    InsertedColumns(interceptor).Should().NotContain("`version`");
+    version.Should().Be(0);
   }
 
   [Fact]
@@ -97,11 +98,21 @@ public sealed class ApprovedDdlTests(ContainersFixture fixture) : DatabaseTestBa
       await context.SaveChangesAsync();
     }
 
-    string insert = interceptor.Commands.Should().ContainSingle(command => command.Contains("INSERT INTO `users`")).Subject;
     long isActive = await ScalarAsync<long>("SELECT is_active FROM users");
 
-    insert.Should().Contain("is_active");
+    InsertedColumns(interceptor).Should().Contain("`is_active`");
     isActive.Should().Be(0);
+  }
+
+  private static string InsertedColumns(CapturingCommandInterceptor interceptor)
+  {
+    string insert = interceptor.Commands
+        .Should().ContainSingle(command => command.Contains("INSERT INTO `users`", StringComparison.Ordinal))
+        .Subject;
+    int start = insert.IndexOf("INSERT INTO `users`", StringComparison.Ordinal);
+    int end = insert.IndexOf("VALUES", start, StringComparison.Ordinal);
+
+    return insert[start..end];
   }
 
   private async Task<IReadOnlyDictionary<string, (string ColumnType, string IsNullable, string? Default)>> DescribeAsync(

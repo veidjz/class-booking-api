@@ -27,7 +27,7 @@ public sealed class DuplicateEmailTests(ContainersFixture fixture) : DatabaseTes
       AssertDuplicateAsync("joao@classbooking.dev", "joão@classbooking.dev");
 
   [Fact]
-  public async Task should_rethrow_when_the_violation_is_not_a_duplicate_key()
+  public async Task should_rethrow_when_the_error_is_not_a_duplicate_key()
   {
     Teacher teacher = Teacher.Create("Paulo", "paulo@classbooking.dev", "hash", CreatedAt);
     await AddAsync(teacher);
@@ -37,6 +37,25 @@ public sealed class DuplicateEmailTests(ContainersFixture fixture) : DatabaseTes
     IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
     Teacher tracked = await context.Users.OfType<Teacher>().SingleAsync();
     context.Entry(tracked).Property(entity => entity.NoShowCount).CurrentValue = -1;
+
+    Func<Task> save = () => unitOfWork.SaveChangesAsync(default);
+
+    await save.Should().ThrowAsync<DbUpdateException>();
+  }
+
+  [Fact]
+  public async Task should_rethrow_when_the_duplicate_key_is_not_mapped()
+  {
+    Student first = Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt);
+    await AddAsync(first);
+
+    Student second = Student.Register("Bruno", "bruno@classbooking.dev", "hash", CreatedAt);
+
+    using IServiceScope scope = CreateScope();
+    AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+    context.Users.Add(second);
+    context.Entry(second).Property(user => user.Id).CurrentValue = first.Id;
 
     Func<Task> save = () => unitOfWork.SaveChangesAsync(default);
 

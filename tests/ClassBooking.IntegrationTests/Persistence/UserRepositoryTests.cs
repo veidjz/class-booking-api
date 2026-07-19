@@ -1,3 +1,4 @@
+using ClassBooking.Application.Abstractions.Data;
 using ClassBooking.Domain.Users;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
 using FluentAssertions;
@@ -32,6 +33,20 @@ public sealed class UserRepositoryTests(ContainersFixture fixture) : DatabaseTes
     await AddAsync(User.CreateAdmin("Root", "root@classbooking.dev", "hash", CreatedAt));
 
     await AssertRowCountsAsync(users: 1, students: 0, teachers: 0);
+  }
+
+  [Fact]
+  public async Task should_persist_the_account_added_through_the_repository()
+  {
+    using (IServiceScope scope = CreateScope())
+    {
+      IUserRepository repository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+      IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+      repository.Add(Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt));
+      await unitOfWork.SaveChangesAsync(default);
+    }
+
+    await AssertRowCountsAsync(users: 1, students: 1, teachers: 0);
   }
 
   [Fact]

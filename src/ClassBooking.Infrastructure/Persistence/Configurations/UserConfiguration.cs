@@ -17,7 +17,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
     builder.Property(user => user.Role);
     builder.Property(user => user.IsActive).HasDefaultValue(true).HasSentinel(true);
     builder.Property(user => user.CreatedAt);
-    builder.Property<int>("Version").IsConcurrencyToken().HasDefaultValue(0).HasSentinel(-1);
+    builder.Property<int>("Version").IsConcurrencyToken().HasDefaultValue(0);
     builder.HasIndex(user => user.Email).IsUnique().HasDatabaseName("ux_users_email");
   }
 }
