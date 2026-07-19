@@ -32,4 +32,30 @@ public class User : AggregateRoot
   public bool IsActive { get; private set; }
 
   public DateTimeOffset CreatedAt { get; }
+
+  public bool Activate(DateTimeOffset occurredAt)
+  {
+    if (IsActive)
+    {
+      return false;
+    }
+
+    IsActive = true;
+    Raise(new AccountActivatedDomainEvent(Id, Role, occurredAt));
+
+    return true;
+  }
+
+  public bool Deactivate(DateTimeOffset occurredAt)
+  {
+    if (!IsActive)
+    {
+      return false;
+    }
+
+    IsActive = false;
+    Raise(new AccountDeactivatedDomainEvent(Id, Role, occurredAt));
+
+    return true;
+  }
 }
