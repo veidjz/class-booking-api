@@ -11,13 +11,22 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ClassBooking.IntegrationTests.Persistence;
 
 [Collection(nameof(DatabaseCollection))]
-public sealed class HostCompositionTests(ContainersFixture fixture) : DatabaseTestBase(fixture)
+public sealed class HostCompositionTests : DatabaseTestBase, IDisposable
 {
+  private readonly WebApplicationFactory<Program> _root = new WebApplicationFactory<Program>();
+  private readonly WebApplicationFactory<Program> _factory;
+
+  public HostCompositionTests(ContainersFixture fixture)
+      : base(fixture) =>
+      _factory = _root.WithWebHostBuilder(builder =>
+          builder.UseSetting("ConnectionStrings:Database", fixture.ConnectionString));
+
+  public void Dispose() => _root.Dispose();
+
   [Fact]
   public void should_resolve_the_persistence_graph()
   {
-    using WebApplicationFactory<Program> factory = CreateFactory();
-    using IServiceScope scope = factory.Services.CreateScope();
+    using IServiceScope scope = _factory.Services.CreateScope();
 
     AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     IAppDbContext appDbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
@@ -32,10 +41,8 @@ public sealed class HostCompositionTests(ContainersFixture fixture) : DatabaseTe
   [Fact]
   public void should_share_a_single_version_token_interceptor()
   {
-    using WebApplicationFactory<Program> factory = CreateFactory();
-
-    VersionTokenInterceptor first = factory.Services.GetRequiredService<VersionTokenInterceptor>();
-    VersionTokenInterceptor second = factory.Services.GetRequiredService<VersionTokenInterceptor>();
+    VersionTokenInterceptor first = _factory.Services.GetRequiredService<VersionTokenInterceptor>();
+    VersionTokenInterceptor second = _factory.Services.GetRequiredService<VersionTokenInterceptor>();
 
     first.Should().BeSameAs(second);
   }
@@ -43,14 +50,8 @@ public sealed class HostCompositionTests(ContainersFixture fixture) : DatabaseTe
   [Fact]
   public void should_register_the_microsecond_clock()
   {
-    using WebApplicationFactory<Program> factory = CreateFactory();
-
-    TimeProvider timeProvider = factory.Services.GetRequiredService<TimeProvider>();
+    TimeProvider timeProvider = _factory.Services.GetRequiredService<TimeProvider>();
 
     timeProvider.Should().BeOfType<MicrosecondTimeProvider>();
   }
-
-  private WebApplicationFactory<Program> CreateFactory() =>
-      new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-          builder.UseSetting("ConnectionStrings:Database", Fixture.ConnectionString));
 }

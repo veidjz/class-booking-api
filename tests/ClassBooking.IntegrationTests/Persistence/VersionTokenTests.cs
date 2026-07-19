@@ -18,8 +18,10 @@ public sealed class VersionTokenTests(ContainersFixture fixture) : DatabaseTestB
   {
     await AddAsync(Student.Register("Ana", "ana@classbooking.dev", "hash", CreatedAt));
 
+    long rows = await ScalarAsync<long>("SELECT COUNT(*) FROM users");
     long version = await ScalarAsync<long>("SELECT version FROM users");
 
+    rows.Should().Be(1);
     version.Should().Be(0);
   }
 

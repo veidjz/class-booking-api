@@ -30,39 +30,47 @@ public sealed class ContainersFixture : IAsyncLifetime
     try
     {
       await _container.StartAsync();
+
+      IConfiguration configuration = new ConfigurationBuilder()
+          .AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:Database"] = ConnectionString })
+          .Build();
+
+      ServiceCollection services = new ServiceCollection();
+      services.AddSingleton(configuration);
+      services.AddLogging();
+      services.AddApplication();
+      services.AddInfrastructure(configuration);
+      _provider = services.BuildServiceProvider(new ServiceProviderOptions
+      {
+        ValidateScopes = true,
+        ValidateOnBuild = true,
+      });
+
+      using (IServiceScope scope = _provider.CreateScope())
+      {
+        AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+      }
+
+      await using MySqlConnection connection = new MySqlConnection(ConnectionString);
+      await connection.OpenAsync();
+      _respawner = await Respawner.CreateAsync(
+          connection,
+          new RespawnerOptions
+          {
+            DbAdapter = DbAdapter.MySql,
+            SchemasToInclude = ["classbooking"],
+            TablesToIgnore = [new Table("__EFMigrationsHistory")],
+          });
     }
     catch (Exception exception)
     {
-      throw new InvalidOperationException("Docker is required to run the integration tests.", exception);
+      await DisposeAsync();
+
+      throw new InvalidOperationException(
+          $"The integration test database could not be prepared (Docker is required): {exception.Message}",
+          exception);
     }
-
-    IConfiguration configuration = new ConfigurationBuilder()
-        .AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:Database"] = ConnectionString })
-        .Build();
-
-    ServiceCollection services = new ServiceCollection();
-    services.AddSingleton(configuration);
-    services.AddLogging();
-    services.AddApplication();
-    services.AddInfrastructure(configuration);
-    _provider = services.BuildServiceProvider();
-
-    using (IServiceScope scope = _provider.CreateScope())
-    {
-      AppDbContext context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-      await context.Database.MigrateAsync();
-    }
-
-    await using MySqlConnection connection = new MySqlConnection(ConnectionString);
-    await connection.OpenAsync();
-    _respawner = await Respawner.CreateAsync(
-        connection,
-        new RespawnerOptions
-        {
-          DbAdapter = DbAdapter.MySql,
-          SchemasToInclude = ["classbooking"],
-          TablesToIgnore = [new Table("__EFMigrationsHistory")],
-        });
   }
 
   public IServiceScope CreateScope() => _provider!.CreateScope();
