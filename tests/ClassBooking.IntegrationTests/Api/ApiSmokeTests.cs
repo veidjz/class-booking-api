@@ -1,21 +1,14 @@
 using System.Text.Json;
+using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ClassBooking.IntegrationTests.Api;
 
 public sealed class ApiSmokeTests
 {
-  private const string ConnectionString =
-      "Server=localhost;Port=3306;Database=classbooking;User Id=classbooking;Password=classbooking";
-
   private static WebApplicationFactory<Program> CreateFactory(string environment) =>
-      new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-      {
-        builder.UseEnvironment(environment);
-        builder.UseSetting("ConnectionStrings:Database", ConnectionString);
-      });
+      new WebApplicationFactory<Program>().Configure(ApiHost.UnusedConnectionString, environment);
 
   [Fact]
   public async Task should_return_resource_not_found_problem_when_route_is_unknown()

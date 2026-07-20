@@ -4,10 +4,11 @@ using System.Text.Json;
 using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Domain.Users;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
+using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 
 namespace ClassBooking.IntegrationTests.Acceptance.Admin;
@@ -26,11 +27,9 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
 
   public RegisterStudentAcceptanceTests(ContainersFixture fixture)
       : base(fixture) =>
-      _factory = _root.WithWebHostBuilder(builder =>
-      {
-        builder.UseSetting("ConnectionStrings:Database", fixture.ConnectionString);
-        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(_clock));
-      });
+      _factory = _root.Configure(
+          fixture.ConnectionString,
+          configureServices: services => services.Replace(ServiceDescriptor.Singleton<TimeProvider>(_clock)));
 
   public void Dispose() => _root.Dispose();
 
@@ -108,6 +107,8 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     await AddAsync(student);
 
     await AssertConflictAsync();
+
+    (await ScalarAsync<bool>("select is_active from users")).Should().BeFalse();
   }
 
   [Fact]

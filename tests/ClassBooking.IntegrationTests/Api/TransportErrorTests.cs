@@ -1,26 +1,18 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace ClassBooking.IntegrationTests.Api;
 
 public sealed class TransportErrorTests
 {
-  private const string ConnectionString =
-      "Server=localhost;Port=3306;Database=classbooking;User Id=classbooking;Password=classbooking";
-
   private const string Route = "/api/v1/auth/register";
 
   private static WebApplicationFactory<Program> CreateFactory(string environment) =>
-      new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-      {
-        builder.UseEnvironment(environment);
-        builder.UseSetting("ConnectionStrings:Database", ConnectionString);
-      });
+      new WebApplicationFactory<Program>().Configure(ApiHost.UnusedConnectionString, environment);
 
   [Theory]
   [InlineData("Development")]
@@ -64,20 +56,5 @@ public sealed class TransportErrorTests
 
     response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
     response.Content.Headers.Allow.Should().Contain("POST");
-  }
-
-  [Fact]
-  public async Task should_return_resource_not_found_problem_when_the_route_is_unknown()
-  {
-    using WebApplicationFactory<Program> factory = CreateFactory("Production");
-    using HttpClient client = factory.CreateClient();
-
-    using HttpResponseMessage response = await client.GetAsync("/api/v1/auth/refresh");
-
-    response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
-
-    using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-    problem.RootElement.GetProperty("errorCode").GetString().Should().Be("ResourceNotFound");
   }
 }

@@ -15,7 +15,7 @@ public sealed class RegisterStudentCommandHandlerTests
 
   private readonly IUserRepository _users = Substitute.For<IUserRepository>();
   private readonly IPasswordHasher _passwordHasher = Substitute.For<IPasswordHasher>();
-  private readonly FakeTimeProvider _clock = new FakeTimeProvider(Now) { AutoAdvanceAmount = TimeSpan.FromSeconds(1) };
+  private readonly FakeTimeProvider _clock = new FakeTimeProvider(Now);
   private readonly RegisterStudentCommandHandler _handler;
 
   private User? _added;
