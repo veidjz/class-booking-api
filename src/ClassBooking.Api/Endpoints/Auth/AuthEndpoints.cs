@@ -11,7 +11,7 @@ internal static class AuthEndpoints
 {
   private const string ProblemMediaType = "application/problem+json";
 
-  internal static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder builder)
+  internal static RouteGroupBuilder MapAuthEndpoints(this IEndpointRouteBuilder builder)
   {
     RouteGroupBuilder group = builder.MapGroup("/api/v1/auth");
 
@@ -25,7 +25,7 @@ internal static class AuthEndpoints
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict, ProblemMediaType)
         .Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests, ProblemMediaType);
 
-    return builder;
+    return group;
   }
 
   private static async Task<IResult> RegisterStudentAsync(
