@@ -15,11 +15,14 @@ builder.Configuration.AddEnvironmentVariables("CLASSBOOKING_");
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-  options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+  options.SerializerOptions.Converters.Add(
+      new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false));
   options.SerializerOptions.Converters.Add(new UtcInstantJsonConverter());
 });
 
-builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
+// A request the framework cannot bind reaches the exception handler in every environment,
+// which is where it becomes a problem document and a log line.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -35,10 +38,9 @@ app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>
 {
   HttpContext httpContext = statusCodeContext.HttpContext;
-  Error? error = TransportErrors.ForStatusCode(httpContext.Response.StatusCode);
-  if (error is not null)
+  if (UnmatchedRouteProblem.ShouldShape(httpContext))
   {
-    await Result.Failure(error).ToProblem(httpContext).ExecuteAsync(httpContext);
+    await UnmatchedRouteProblem.WriteAsync(httpContext);
   }
 });
 

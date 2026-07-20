@@ -14,10 +14,18 @@ internal sealed class GlobalExceptionHandler(
       Exception exception,
       CancellationToken cancellationToken)
   {
-    logger.LogError(exception, "Unhandled exception for {RequestPath}", httpContext.Request.Path);
+    bool malformed = exception is BadHttpRequestException { StatusCode: StatusCodes.Status400BadRequest };
+    if (malformed)
+    {
+      logger.LogWarning(exception, "Request could not be read for {RequestPath}", httpContext.Request.Path);
+    }
+    else
+    {
+      logger.LogError(exception, "Unhandled exception for {RequestPath}", httpContext.Request.Path);
+    }
 
     ProblemDetails problemDetails = ProblemDetailsMapper.ToProblemDetails(
-        TransportErrors.UnexpectedError,
+        malformed ? TransportErrors.MalformedRequest : TransportErrors.UnexpectedError,
         httpContext.Request.Path,
         Activity.Current?.Id ?? httpContext.TraceIdentifier);
 

@@ -14,12 +14,5 @@ internal static class TransportErrors
       new("RateLimitExceeded", "Too many requests. Try again later.");
 
   internal static readonly Error MalformedRequest =
-      new("ValidationFailed", "The request body could not be read.");
-
-  internal static Error? ForStatusCode(int statusCode) => statusCode switch
-  {
-    StatusCodes.Status400BadRequest => MalformedRequest,
-    StatusCodes.Status404NotFound => ResourceNotFound,
-    _ => null,
-  };
+      new("ValidationFailed", "The request could not be read.");
 }

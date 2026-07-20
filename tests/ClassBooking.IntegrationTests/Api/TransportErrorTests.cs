@@ -4,6 +4,8 @@ using System.Text.Json;
 using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ClassBooking.IntegrationTests.Api;
 
@@ -56,5 +58,23 @@ public sealed class TransportErrorTests
 
     response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
     response.Content.Headers.Allow.Should().Contain("POST");
+  }
+
+  [Fact]
+  public async Task should_log_the_binding_failure_that_produced_the_problem()
+  {
+    RecordingLoggerProvider logs = new RecordingLoggerProvider();
+    using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>().Configure(
+        ApiHost.UnusedConnectionString,
+        "Production",
+        configureServices: services => services.AddSingleton<ILoggerProvider>(logs));
+    using HttpClient client = factory.CreateClient();
+
+    using StringContent content = new StringContent("{not json", Encoding.UTF8, "application/json");
+    using HttpResponseMessage response = await client.PostAsync(Route, content);
+
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    logs.Records.Should().Contain(record =>
+        record.Level == LogLevel.Warning && record.Message.Contains("Request could not be read"));
   }
 }
