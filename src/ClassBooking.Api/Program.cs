@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
@@ -9,6 +10,9 @@ using Scalar.AspNetCore;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables("CLASSBOOKING_");
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
