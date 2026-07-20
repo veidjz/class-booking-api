@@ -18,6 +18,12 @@ public sealed class RegisterStudentCommandValidatorTests
   public static TheoryData<string> ValidNames() =>
       new TheoryData<string> { "An", new string('a', 120), "  Ana  " };
 
+  public static TheoryData<string?> InvalidPasswords() =>
+      new TheoryData<string?> { null, "", new string('a', 7), new string('a', 101) };
+
+  public static TheoryData<string> ValidPasswords() =>
+      new TheoryData<string> { new string('a', 8), new string('a', 100) };
+
   [Theory]
   [MemberData(nameof(InvalidNames))]
   public void should_reject_the_name_when_it_is_missing_or_outside_the_trimmed_bounds(string? name)
@@ -72,6 +78,24 @@ public sealed class RegisterStudentCommandValidatorTests
     ValidationResult result = _validator.Validate(Command(email: "  ana.souza@example.com  "));
 
     result.Errors.Should().NotContain(failure => failure.PropertyName == "Email");
+  }
+
+  [Theory]
+  [MemberData(nameof(InvalidPasswords))]
+  public void should_reject_the_password_when_it_is_missing_or_outside_the_length_bounds(string? password)
+  {
+    ValidationResult result = _validator.Validate(Command(password: password));
+
+    result.Errors.Should().ContainSingle(failure => failure.PropertyName == "Password");
+  }
+
+  [Theory]
+  [MemberData(nameof(ValidPasswords))]
+  public void should_accept_the_password_at_the_length_bounds(string password)
+  {
+    ValidationResult result = _validator.Validate(Command(password: password));
+
+    result.Errors.Should().NotContain(failure => failure.PropertyName == "Password");
   }
 
   private static string Address(int length)
