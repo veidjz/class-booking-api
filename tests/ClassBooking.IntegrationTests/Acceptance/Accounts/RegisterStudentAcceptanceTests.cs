@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 
-namespace ClassBooking.IntegrationTests.Acceptance.Admin;
+namespace ClassBooking.IntegrationTests.Acceptance.Accounts;
 
 [Collection(nameof(DatabaseCollection))]
 public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposable
