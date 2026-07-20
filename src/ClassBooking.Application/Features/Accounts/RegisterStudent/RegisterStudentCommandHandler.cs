@@ -16,9 +16,11 @@ internal sealed class RegisterStudentCommandHandler(
       CancellationToken cancellationToken)
   {
     DateTimeOffset now = clock.GetUtcNow();
+    string name = command.Name.Trim();
+    string email = command.Email.Trim().ToLowerInvariant();
     string passwordHash = passwordHasher.Hash(command.Password);
 
-    Student student = Student.Register(command.Name, command.Email, passwordHash, now);
+    Student student = Student.Register(name, email, passwordHash, now);
     users.Add(student);
 
     return Task.FromResult(Result.Success(new RegisterStudentResponse(
