@@ -87,6 +87,14 @@ jobs:
             echo "ambient clock found, take the instant from TimeProvider"; exit 1
           fi
 
+      - name: Gate scenarios against the manifest
+        run: |
+          traits=$(grep -rhoE '\[Trait\("Scenario", "[A-Z]+-[A-Z]+-[0-9]+"\)\]' tests --include=*.cs \
+            | grep -oE '[A-Z]+-[A-Z]+-[0-9]+' | sort -u)
+          if ! diff <(sort -u tests/scenario-manifest.txt) <(echo "$traits"); then
+            echo "the scenario manifest and the scenario traits disagree"; exit 1
+          fi
+
       - name: Test domain
         run: dotnet test tests/ClassBooking.Domain.UnitTests -c Release --no-build
 
