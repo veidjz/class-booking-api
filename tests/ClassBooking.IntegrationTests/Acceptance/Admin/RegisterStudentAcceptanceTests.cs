@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Domain.Users;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
@@ -117,6 +118,18 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     await AddAsync(Teacher.Create("Paulo", "ana@classbooking.dev", "hash", Now));
 
     await AssertConflictAsync();
+  }
+
+  /// <remarks>
+  /// The behaviour below only holds because the request carries no role to bind: a member added
+  /// here would be bound and the payload would start deciding the role. This pins the shape.
+  /// </remarks>
+  [Fact]
+  [Trait("Scenario", "ACC-ADM-06")]
+  public void should_not_offer_a_role_to_the_payload()
+  {
+    typeof(RegisterStudentRequest).GetProperties().Select(property => property.Name)
+        .Should().BeEquivalentTo("Name", "Email", "Password");
   }
 
   [Fact]
