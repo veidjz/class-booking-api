@@ -18,6 +18,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
   options.SerializerOptions.Converters.Add(new UtcInstantJsonConverter());
 });
 
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddOpenApi();
@@ -28,6 +30,16 @@ WebApplication app = builder.Build();
 
 app.UseExceptionHandler();
 
+app.UseStatusCodePages(async statusCodeContext =>
+{
+  HttpContext httpContext = statusCodeContext.HttpContext;
+  Error? error = TransportErrors.ForStatusCode(httpContext.Response.StatusCode);
+  if (error is not null)
+  {
+    await Result.Failure(error).ToProblem(httpContext).ExecuteAsync(httpContext);
+  }
+});
+
 if (app.Environment.IsDevelopment())
 {
   app.MapOpenApi();
@@ -35,9 +47,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapAuthEndpoints();
-
-app.MapFallback((HttpContext httpContext) =>
-    Result.Failure(TransportErrors.ResourceNotFound).ToProblem(httpContext));
 
 app.Run();
 
