@@ -39,9 +39,10 @@ csharp_prefer_braces = true:suggestion
 csharp_style_prefer_pattern_matching = true:suggestion
 dotnet_style_prefer_conditional_expression_over_return = true:suggestion
 
-# Generated migrations: EF scaffolds with 4-space indent, braced namespaces and var
+# EF scaffolds migrations with 4-space indent, a BOM and a braced namespace. The style is
+# declared instead of silenced: every analyzer stays on for this path, so a file written by
+# hand here still answers to IDE0008 and friends.
 [**/Migrations/*.cs]
-generated_code = true
-dotnet_diagnostic.IDE0008.severity = none
+indent_size = 4
+charset = utf-8-bom
 dotnet_diagnostic.IDE0161.severity = none
-dotnet_diagnostic.IDE0055.severity = none
