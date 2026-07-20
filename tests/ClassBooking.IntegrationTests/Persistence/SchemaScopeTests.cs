@@ -57,7 +57,11 @@ public sealed class SchemaScopeTests(ContainersFixture fixture) : DatabaseTestBa
   [Fact]
   public async Task should_clear_the_account_tables_and_keep_the_migration_history()
   {
-    await AddAsync(User.CreateAdmin("Root", "root@classbooking.dev", "hash", DateTimeOffset.UtcNow));
+    await AddAsync(User.CreateAdmin(
+        "Root",
+        "root@classbooking.dev",
+        "hash",
+        new DateTimeOffset(2026, 3, 2, 12, 0, 0, TimeSpan.Zero)));
 
     await Fixture.ResetAsync();
 
