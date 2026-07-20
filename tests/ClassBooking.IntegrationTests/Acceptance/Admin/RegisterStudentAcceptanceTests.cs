@@ -59,4 +59,25 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     (await ScalarAsync<long>("select count(*) from students")).Should().Be(1);
     (await ScalarAsync<long>("select count(*) from teachers")).Should().Be(0);
   }
+
+  [Fact]
+  public async Task should_serialize_the_account_role_as_the_domain_name()
+  {
+    using JsonDocument body = await RegisterAsync();
+
+    body.RootElement.GetProperty("role").GetString().Should().Be("Student");
+  }
+
+  private async Task<JsonDocument> RegisterAsync()
+  {
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(
+        Route,
+        new { name = "Ana Souza", email = "ana.souza@example.com", password = "s3nh4-segura" });
+
+    response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+    return JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+  }
 }
