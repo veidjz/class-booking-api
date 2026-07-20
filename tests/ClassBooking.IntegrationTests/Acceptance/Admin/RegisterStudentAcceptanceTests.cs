@@ -104,6 +104,37 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     await AssertConflictAsync();
   }
 
+  [Fact]
+  public async Task should_reject_the_registration_when_the_payload_is_malformed()
+  {
+    await AssertValidationFailedAsync(new { name = "   ", email = "not-an-email", password = "abc" });
+  }
+
+  [Fact]
+  public async Task should_reject_the_registration_when_the_body_is_an_empty_object()
+  {
+    await AssertValidationFailedAsync(new { });
+  }
+
+  private async Task AssertValidationFailedAsync(object payload)
+  {
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(Route, payload);
+
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+
+    using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    problem.RootElement.GetProperty("errorCode").GetString().Should().Be("ValidationFailed");
+    problem.RootElement.GetProperty("instance").GetString().Should().Be(Route);
+    problem.RootElement.GetProperty("errors").EnumerateObject()
+        .Select(property => property.Name)
+        .Should().BeEquivalentTo("name", "email", "password");
+
+    (await ScalarAsync<long>("select count(*) from users")).Should().Be(0);
+  }
+
   private async Task AssertConflictAsync()
   {
     using HttpClient client = _factory.CreateClient();
