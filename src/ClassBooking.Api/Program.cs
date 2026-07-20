@@ -1,3 +1,4 @@
+using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
 using ClassBooking.Application;
@@ -24,6 +25,8 @@ if (app.Environment.IsDevelopment())
   app.MapOpenApi();
   app.MapScalarApiReference();
 }
+
+app.MapAuthEndpoints();
 
 app.MapFallback((HttpContext httpContext) =>
     Result.Failure(TransportErrors.ResourceNotFound).ToProblem(httpContext));
