@@ -15,6 +15,7 @@ internal static class ApiHost
       this WebApplicationFactory<Program> root,
       string connectionString,
       string? environment = null,
+      bool rateLimiting = false,
       Action<IServiceCollection>? configureServices = null) =>
       root.WithWebHostBuilder(builder =>
       {
@@ -24,6 +25,7 @@ internal static class ApiHost
         }
 
         builder.UseSetting("ConnectionStrings:Database", connectionString);
+        builder.UseSetting("RateLimiting:Enabled", rateLimiting ? "true" : "false");
 
         if (configureServices is not null)
         {

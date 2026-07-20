@@ -1,7 +1,9 @@
 using ClassBooking.Api.Errors;
+using ClassBooking.Api.RateLimiting;
 using ClassBooking.Application.Features.Accounts.RegisterStudent;
 using ClassBooking.Domain.Common;
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ClassBooking.Api.Endpoints.Auth;
 
@@ -9,9 +11,11 @@ internal static class AuthEndpoints
 {
   internal static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder builder)
   {
-    RouteGroupBuilder group = builder.MapGroup("/api/v1/auth").AllowAnonymous();
+    RouteGroupBuilder group = builder.MapGroup("/api/v1/auth");
 
     group.MapPost("/register", RegisterStudentAsync)
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.Auth)
         .Produces<RegisterStudentResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status409Conflict);

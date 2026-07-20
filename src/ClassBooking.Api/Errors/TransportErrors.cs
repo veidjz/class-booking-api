@@ -10,6 +10,9 @@ internal static class TransportErrors
   internal static readonly Error UnexpectedError =
       new("UnexpectedError", "An unexpected error occurred.");
 
+  internal static readonly Error RateLimitExceeded =
+      new("RateLimitExceeded", "Too many requests. Try again later.");
+
   internal static readonly Error MalformedRequest =
       new("ValidationFailed", "The request body could not be read.");
 
