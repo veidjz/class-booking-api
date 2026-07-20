@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
+using ClassBooking.Api.OpenApi;
 using ClassBooking.Api.RateLimiting;
 using ClassBooking.Api.Serialization;
 using ClassBooking.Application;
@@ -27,7 +28,11 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddRateLimiting(builder.Configuration);
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+  options.AddSchemaTransformer<StringSchemaTypeTransformer>();
+  options.AddOperationTransformer<CreatedLocationHeaderTransformer>();
+});
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 

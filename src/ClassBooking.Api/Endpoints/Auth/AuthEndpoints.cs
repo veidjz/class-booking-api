@@ -9,16 +9,21 @@ namespace ClassBooking.Api.Endpoints.Auth;
 
 internal static class AuthEndpoints
 {
+  private const string ProblemMediaType = "application/problem+json";
+
   internal static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder builder)
   {
     RouteGroupBuilder group = builder.MapGroup("/api/v1/auth");
 
     group.MapPost("/register", RegisterStudentAsync)
+        .WithName("RegisterStudent")
+        .WithTags("Auth")
         .AllowAnonymous()
         .RequireRateLimiting(RateLimitPolicies.Auth)
         .Produces<RegisterStudentResponse>(StatusCodes.Status201Created)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status409Conflict);
+        .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest, ProblemMediaType)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict, ProblemMediaType)
+        .Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests, ProblemMediaType);
 
     return builder;
   }
