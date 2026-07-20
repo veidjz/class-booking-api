@@ -62,6 +62,32 @@ public sealed class RegisterStudentCommandHandlerTests
         Now));
   }
 
+  [Fact]
+  public async Task should_persist_the_email_trimmed_and_lowercased()
+  {
+    await _handler.Handle(Command(email: "  ANA@Example.COM  "), CancellationToken.None);
+
+    _added!.Email.Should().Be("ana@example.com");
+  }
+
+  [Fact]
+  public async Task should_persist_the_name_trimmed()
+  {
+    await _handler.Handle(Command(name: "  Ana Souza  "), CancellationToken.None);
+
+    _added!.Name.Should().Be("Ana Souza");
+  }
+
+  [Fact]
+  public async Task should_return_the_normalized_values()
+  {
+    Result<RegisterStudentResponse> result =
+        await _handler.Handle(Command("  Ana Souza  ", "  ANA@Example.COM  "), CancellationToken.None);
+
+    result.Value.Name.Should().Be("Ana Souza");
+    result.Value.Email.Should().Be("ana@example.com");
+  }
+
   private static RegisterStudentCommand Command(
       string name = "Ana Souza",
       string email = "ana.souza@example.com",
