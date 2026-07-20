@@ -1,5 +1,7 @@
+using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Application.Abstractions.Data;
 using ClassBooking.Domain.Users;
+using ClassBooking.Infrastructure.Auth;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.Infrastructure.Persistence.Interceptors;
 using ClassBooking.Infrastructure.Persistence.Repositories;
@@ -32,6 +34,7 @@ public static class DependencyInjection
     services.AddScoped<IAppDbContext>(serviceProvider => serviceProvider.GetRequiredService<AppDbContext>());
     services.AddScoped<IUnitOfWork, UnitOfWork>();
     services.AddScoped<IUserRepository, UserRepository>();
+    services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
     services.Replace(ServiceDescriptor.Singleton<TimeProvider>(new MicrosecondTimeProvider(TimeProvider.System)));
 
