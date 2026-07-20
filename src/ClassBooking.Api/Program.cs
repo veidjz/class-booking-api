@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
+using ClassBooking.Api.Serialization;
 using ClassBooking.Application;
 using ClassBooking.Domain.Common;
 using ClassBooking.Infrastructure;
@@ -12,7 +13,10 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables("CLASSBOOKING_");
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+{
+  options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+  options.SerializerOptions.Converters.Add(new UtcInstantJsonConverter());
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
