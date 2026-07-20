@@ -1,0 +1,62 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using ClassBooking.IntegrationTests.Persistence.Fixtures;
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
+
+namespace ClassBooking.IntegrationTests.Acceptance.Admin;
+
+[Collection(nameof(DatabaseCollection))]
+public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposable
+{
+  private const string Route = "/api/v1/auth/register";
+
+  private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 3, 2, 12, 0, 0, TimeSpan.Zero);
+
+  private readonly FakeTimeProvider _clock = new FakeTimeProvider(Now);
+  private readonly WebApplicationFactory<Program> _root = new WebApplicationFactory<Program>();
+  private readonly WebApplicationFactory<Program> _factory;
+
+  public RegisterStudentAcceptanceTests(ContainersFixture fixture)
+      : base(fixture) =>
+      _factory = _root.WithWebHostBuilder(builder =>
+      {
+        builder.UseSetting("ConnectionStrings:Database", fixture.ConnectionString);
+        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(_clock));
+      });
+
+  public void Dispose() => _root.Dispose();
+
+  [Fact]
+  [Trait("Scenario", "ACC-ADM-05")]
+  public async Task should_create_an_active_student_account_when_a_visitor_registers()
+  {
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(
+        Route,
+        new { name = "  Ana Souza  ", email = "  ANA.Souza@Example.COM  ", password = "s3nh4-segura" });
+
+    response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+    using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    string id = body.RootElement.GetProperty("id").GetString()!;
+    body.RootElement.GetProperty("name").GetString().Should().Be("Ana Souza");
+    body.RootElement.GetProperty("email").GetString().Should().Be("ana.souza@example.com");
+    body.RootElement.GetProperty("active").GetBoolean().Should().BeTrue();
+    response.Headers.Location!.ToString().Should().Be($"/api/v1/students/{id}");
+
+    IReadOnlyList<(string Name, string Email, string Role, bool IsActive)> rows = await QueryAsync(
+        "select name, email, role, is_active from users",
+        reader => (reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetBoolean(3)));
+
+    rows.Should().ContainSingle();
+    rows[0].Should().Be(("Ana Souza", "ana.souza@example.com", "Student", true));
+    (await ScalarAsync<long>("select count(*) from students")).Should().Be(1);
+    (await ScalarAsync<long>("select count(*) from teachers")).Should().Be(0);
+  }
+}
