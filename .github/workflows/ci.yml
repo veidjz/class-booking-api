@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -15,11 +19,82 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore tools
+        run: dotnet tool restore
+
       - name: Restore
         run: dotnet restore ClassBooking.slnx
+
+      - name: Verify formatting
+        run: dotnet format ClassBooking.slnx --verify-no-changes
 
       - name: Build
         run: dotnet build ClassBooking.slnx -c Release --no-restore
 
-      - name: Test
-        run: dotnet test ClassBooking.slnx -c Release --no-build
+      - name: Gate migrations against the model
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project src/ClassBooking.Infrastructure
+          --startup-project src/ClassBooking.Api
+          --configuration Release --no-build
+
+      - name: Script migrations
+        env:
+          DOTNET_ROLL_FORWARD: Major
+        run: >
+          dotnet ef migrations script --idempotent
+          --project src/ClassBooking.Infrastructure
+          --startup-project src/ClassBooking.Api
+          --configuration Release --no-build
+          -o artifacts/migrations.sql
+
+      - name: Upload migrations script
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrations-script
+          path: artifacts/migrations.sql
+
+      - name: Forbid schema shortcuts
+        run: |
+          if grep -rEn 'EnsureCreated|UseInMemoryDatabase|UseSqlite|ServerVersion\.AutoDetect|EnableRetryOnFailure|UseLazyLoadingProxies' src tests --include=*.cs; then
+            echo "forbidden persistence shortcut found"; exit 1
+          fi
+
+      - name: Forbid real waits in tests
+        run: |
+          if grep -rEn 'Task\.Delay|Thread\.Sleep' tests --include=*.cs; then
+            echo "forbidden wait found"; exit 1
+          fi
+
+      - name: Keep SaveChanges inside the unit of work
+        run: |
+          if grep -rEn '\.SaveChanges(Async)?\(' src --include=*.cs | grep -vE 'Persistence/UnitOfWork\.cs|Behaviors/UnitOfWorkBehavior\.cs'; then
+            echo "SaveChanges outside the unit of work"; exit 1
+          fi
+
+      - name: Forbid ambient clocks in production code
+        run: |
+          if grep -rEn 'DateTime(Offset)?\.(UtcNow|Now|Today)' src --include=*.cs; then
+            echo "ambient clock found, take the instant from TimeProvider"; exit 1
+          fi
+
+      - name: Test domain
+        run: dotnet test tests/ClassBooking.Domain.UnitTests -c Release --no-build
+
+      - name: Test application
+        run: dotnet test tests/ClassBooking.Application.UnitTests -c Release --no-build
+
+      - name: Test architecture
+        run: dotnet test tests/ClassBooking.ArchitectureTests -c Release --no-build
+
+      - name: Test integration
+        run: dotnet test tests/ClassBooking.IntegrationTests -c Release --no-build
