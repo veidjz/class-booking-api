@@ -105,6 +105,25 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
   }
 
   [Fact]
+  [Trait("Scenario", "ACC-ADM-06")]
+  public async Task should_create_a_student_when_the_payload_carries_a_role()
+  {
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(
+        Route,
+        new { name = "Ana Souza", email = "ana.souza@example.com", password = "s3nh4-segura", role = "Teacher" });
+
+    response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+    using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    body.RootElement.GetProperty("role").GetString().Should().Be("Student");
+
+    (await ScalarAsync<string>("select role from users")).Should().Be("Student");
+    (await ScalarAsync<long>("select count(*) from teachers")).Should().Be(0);
+  }
+
+  [Fact]
   public async Task should_reject_the_registration_when_the_payload_is_malformed()
   {
     await AssertValidationFailedAsync(new { name = "   ", email = "not-an-email", password = "abc" });
