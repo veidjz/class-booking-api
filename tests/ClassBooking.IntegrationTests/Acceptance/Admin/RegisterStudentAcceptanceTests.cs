@@ -68,6 +68,14 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     body.RootElement.GetProperty("role").GetString().Should().Be("Student");
   }
 
+  [Fact]
+  public async Task should_serialize_the_creation_instant_as_utc_with_a_z_suffix()
+  {
+    using JsonDocument body = await RegisterAsync();
+
+    body.RootElement.GetProperty("createdAt").GetString().Should().Be("2026-03-02T12:00:00Z");
+  }
+
   private async Task<JsonDocument> RegisterAsync()
   {
     using HttpClient client = _factory.CreateClient();
