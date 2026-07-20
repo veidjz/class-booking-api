@@ -43,6 +43,16 @@ public sealed class BcryptPasswordHasherTests
     first.Should().NotBe(second);
   }
 
+  [Theory]
+  [InlineData("")]
+  [InlineData("hash")]
+  [InlineData("$2a$12$")]
+  [InlineData("$9z$99$notarealhashvalue")]
+  public void should_reject_a_password_when_the_stored_hash_cannot_be_read(string storedHash)
+  {
+    _hasher.Verify(Password, storedHash).Should().BeFalse();
+  }
+
   [Fact]
   public void should_distinguish_passwords_that_differ_after_the_seventy_two_byte_truncation_point()
   {
