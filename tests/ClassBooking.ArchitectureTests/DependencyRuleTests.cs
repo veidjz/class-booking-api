@@ -40,7 +40,7 @@ public sealed class DependencyRuleTests
   {
     TestResult result = Types.InAssembly(Application)
         .Should()
-        .NotHaveDependencyOnAny("Pomelo", "MySqlConnector", "StackExchange.Redis", "RabbitMQ", "Hangfire")
+        .NotHaveDependencyOnAny("Pomelo", "MySqlConnector", "StackExchange.Redis", "RabbitMQ", "Hangfire", "BCrypt")
         .GetResult();
 
     Assert.True(result.IsSuccessful, FailureMessage(result));

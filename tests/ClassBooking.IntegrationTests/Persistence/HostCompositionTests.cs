@@ -1,9 +1,12 @@
+using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Application.Abstractions.Data;
 using ClassBooking.Domain.Users;
+using ClassBooking.Infrastructure.Auth;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.Infrastructure.Persistence.Interceptors;
 using ClassBooking.Infrastructure.Time;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
+using ClassBooking.IntegrationTests.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +21,7 @@ public sealed class HostCompositionTests : DatabaseTestBase, IDisposable
 
   public HostCompositionTests(ContainersFixture fixture)
       : base(fixture) =>
-      _factory = _root.WithWebHostBuilder(builder =>
-          builder.UseSetting("ConnectionStrings:Database", fixture.ConnectionString));
+      _factory = _root.Configure(fixture.ConnectionString);
 
   public void Dispose() => _root.Dispose();
 
@@ -53,5 +55,13 @@ public sealed class HostCompositionTests : DatabaseTestBase, IDisposable
     TimeProvider timeProvider = _factory.Services.GetRequiredService<TimeProvider>();
 
     timeProvider.Should().BeOfType<MicrosecondTimeProvider>();
+  }
+
+  [Fact]
+  public void should_register_the_password_hasher()
+  {
+    IPasswordHasher passwordHasher = _factory.Services.GetRequiredService<IPasswordHasher>();
+
+    passwordHasher.Should().BeOfType<BcryptPasswordHasher>();
   }
 }
