@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ClassBooking.Domain.Users;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -74,6 +75,51 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     using JsonDocument body = await RegisterAsync();
 
     body.RootElement.GetProperty("createdAt").GetString().Should().Be("2026-03-02T12:00:00Z");
+  }
+
+  [Fact]
+  [Trait("Scenario", "ACC-ADM-07")]
+  public async Task should_reject_the_registration_when_the_email_belongs_to_an_account()
+  {
+    await AddAsync(Student.Register("Ana", "ana@classbooking.dev", "hash", Now));
+
+    await AssertConflictAsync();
+  }
+
+  [Fact]
+  public async Task should_reject_the_registration_when_the_email_belongs_to_a_deactivated_account()
+  {
+    Student student = Student.Register("Ana", "ana@classbooking.dev", "hash", Now);
+    student.Deactivate(Now);
+    await AddAsync(student);
+
+    await AssertConflictAsync();
+  }
+
+  [Fact]
+  public async Task should_reject_the_registration_when_the_email_belongs_to_a_teacher()
+  {
+    await AddAsync(Teacher.Create("Paulo", "ana@classbooking.dev", "hash", Now));
+
+    await AssertConflictAsync();
+  }
+
+  private async Task AssertConflictAsync()
+  {
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(
+        Route,
+        new { name = "Ana Souza", email = "  ANA@ClassBooking.dev  ", password = "s3nh4-segura" });
+
+    response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+
+    using JsonDocument problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    problem.RootElement.GetProperty("errorCode").GetString().Should().Be("EmailAlreadyInUse");
+    problem.RootElement.GetProperty("instance").GetString().Should().Be(Route);
+
+    (await ScalarAsync<long>("select count(*) from users")).Should().Be(1);
   }
 
   private async Task<JsonDocument> RegisterAsync()
