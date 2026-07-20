@@ -1,5 +1,7 @@
+using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Application.Abstractions.Data;
 using ClassBooking.Domain.Users;
+using ClassBooking.Infrastructure.Auth;
 using ClassBooking.Infrastructure.Persistence;
 using ClassBooking.Infrastructure.Persistence.Interceptors;
 using ClassBooking.Infrastructure.Time;
@@ -53,5 +55,13 @@ public sealed class HostCompositionTests : DatabaseTestBase, IDisposable
     TimeProvider timeProvider = _factory.Services.GetRequiredService<TimeProvider>();
 
     timeProvider.Should().BeOfType<MicrosecondTimeProvider>();
+  }
+
+  [Fact]
+  public void should_register_the_password_hasher()
+  {
+    IPasswordHasher passwordHasher = _factory.Services.GetRequiredService<IPasswordHasher>();
+
+    passwordHasher.Should().BeOfType<BcryptPasswordHasher>();
   }
 }
