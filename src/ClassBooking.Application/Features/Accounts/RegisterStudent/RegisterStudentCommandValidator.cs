@@ -18,5 +18,10 @@ internal sealed class RegisterStudentCommandValidator : AbstractValidator<Regist
         .EmailAddress()
         .MaximumLength(254)
         .OverridePropertyName("Email");
+
+    RuleFor(command => command.Password)
+        .Cascade(CascadeMode.Stop)
+        .NotEmpty()
+        .Length(8, 100);
   }
 }
