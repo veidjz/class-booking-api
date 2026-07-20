@@ -40,6 +40,14 @@ public sealed class RegisterStudentCommandHandlerTests
   }
 
   [Fact]
+  public async Task should_hash_the_submitted_password_untouched()
+  {
+    await _handler.Handle(Command(password: "  s3nh4 com espaco  "), CancellationToken.None);
+
+    _passwordHasher.Received(1).Hash("  s3nh4 com espaco  ");
+  }
+
+  [Fact]
   public async Task should_stamp_the_account_with_the_injected_instant()
   {
     await _handler.Handle(Command(), CancellationToken.None);

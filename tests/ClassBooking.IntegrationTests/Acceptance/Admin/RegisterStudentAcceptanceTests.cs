@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ClassBooking.Application.Abstractions.Auth;
 using ClassBooking.Domain.Users;
 using ClassBooking.IntegrationTests.Persistence.Fixtures;
 using FluentAssertions;
@@ -15,6 +16,7 @@ namespace ClassBooking.IntegrationTests.Acceptance.Admin;
 public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposable
 {
   private const string Route = "/api/v1/auth/register";
+  private const string Password = "s3nh4-segura";
 
   private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 3, 2, 12, 0, 0, TimeSpan.Zero);
 
@@ -40,7 +42,7 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
         Route,
-        new { name = "  Ana Souza  ", email = "  ANA.Souza@Example.COM  ", password = "s3nh4-segura" });
+        new { name = "  Ana Souza  ", email = "  ANA.Souza@Example.COM  ", password = Password });
 
     response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -59,6 +61,18 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     rows[0].Should().Be(("Ana Souza", "ana.souza@example.com", "Student", true));
     (await ScalarAsync<long>("select count(*) from students")).Should().Be(1);
     (await ScalarAsync<long>("select count(*) from teachers")).Should().Be(0);
+  }
+
+  [Fact]
+  public async Task should_store_a_hash_that_verifies_against_the_submitted_password()
+  {
+    using JsonDocument registered = await RegisterAsync();
+
+    string hash = (await ScalarAsync<string>("select password_hash from users"))!;
+
+    hash.Should().NotBe(Password);
+    IPasswordHasher hasher = _factory.Services.GetRequiredService<IPasswordHasher>();
+    hasher.Verify(Password, hash).Should().BeTrue();
   }
 
   [Fact]
@@ -112,7 +126,7 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
         Route,
-        new { name = "Ana Souza", email = "ana.souza@example.com", password = "s3nh4-segura", role = "Teacher" });
+        new { name = "Ana Souza", email = "ana.souza@example.com", password = Password, role = "Teacher" });
 
     response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -160,7 +174,7 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
         Route,
-        new { name = "Ana Souza", email = "  ANA@ClassBooking.dev  ", password = "s3nh4-segura" });
+        new { name = "Ana Souza", email = "  ANA@ClassBooking.dev  ", password = Password });
 
     response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
@@ -178,7 +192,7 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
         Route,
-        new { name = "Ana Souza", email = "ana.souza@example.com", password = "s3nh4-segura" });
+        new { name = "Ana Souza", email = "ana.souza@example.com", password = Password });
 
     response.StatusCode.Should().Be(HttpStatusCode.Created);
 
