@@ -1,4 +1,5 @@
 using ClassBooking.Domain.Users;
+using ClassBooking.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,6 +20,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
     builder.Property(user => user.IsActive).HasDefaultValue(true).HasSentinel(true);
     builder.Property(user => user.CreatedAt);
     builder.Property<int>("Version").IsConcurrencyToken().HasDefaultValue(0);
-    builder.HasIndex(user => user.Email).IsUnique().HasDatabaseName("ux_users_email");
+    builder.HasIndex(user => user.Email).IsUnique().HasDatabaseName(UniqueIndexes.UsersEmail);
   }
 }
