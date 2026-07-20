@@ -11,24 +11,30 @@ internal sealed class RegisterStudentCommandHandler(
     TimeProvider clock)
     : ICommandHandler<RegisterStudentCommand, RegisterStudentResponse>
 {
-  public Task<Result<RegisterStudentResponse>> Handle(
+  public async Task<Result<RegisterStudentResponse>> Handle(
       RegisterStudentCommand command,
       CancellationToken cancellationToken)
   {
     DateTimeOffset now = clock.GetUtcNow();
     string name = command.Name.Trim();
     string email = command.Email.Trim().ToLowerInvariant();
+
+    if (await users.ExistsByEmailAsync(email, cancellationToken))
+    {
+      return Result.Failure<RegisterStudentResponse>(UserErrors.EmailAlreadyInUse);
+    }
+
     string passwordHash = passwordHasher.Hash(command.Password);
 
     Student student = Student.Register(name, email, passwordHash, now);
     users.Add(student);
 
-    return Task.FromResult(Result.Success(new RegisterStudentResponse(
+    return Result.Success(new RegisterStudentResponse(
         student.Id,
         student.Name,
         student.Email,
         student.Role,
         student.IsActive,
-        student.CreatedAt)));
+        student.CreatedAt));
   }
 }
