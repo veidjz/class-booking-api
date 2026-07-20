@@ -88,6 +88,27 @@ public sealed class RegisterStudentCommandHandlerTests
     result.Value.Email.Should().Be("ana@example.com");
   }
 
+  [Fact]
+  public async Task should_return_email_already_in_use_when_the_email_belongs_to_an_account()
+  {
+    _users.ExistsByEmailAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+
+    Result<RegisterStudentResponse> result = await _handler.Handle(Command(), CancellationToken.None);
+
+    result.IsFailure.Should().BeTrue();
+    result.Error.Should().Be(UserErrors.EmailAlreadyInUse);
+    _users.DidNotReceive().Add(Arg.Any<User>());
+    _passwordHasher.DidNotReceive().Hash(Arg.Any<string>());
+  }
+
+  [Fact]
+  public async Task should_check_uniqueness_against_the_normalized_email()
+  {
+    await _handler.Handle(Command(email: "  ANA@Example.COM  "), CancellationToken.None);
+
+    await _users.Received().ExistsByEmailAsync("ana@example.com", Arg.Any<CancellationToken>());
+  }
+
   private static RegisterStudentCommand Command(
       string name = "Ana Souza",
       string email = "ana.souza@example.com",
