@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ClassBooking.Api.Auth;
 using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
@@ -36,6 +37,7 @@ builder.Services.AddOptions<JwtOptions>()
         options => options.HasValidSigningKey(),
         "The 'Jwt:SigningKey' must be Base64 content decoding to at least 32 bytes.")
     .ValidateOnStart();
+builder.Services.AddApiAuthentication();
 builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddOpenApi(options =>
 {
@@ -60,10 +62,14 @@ app.UseStatusCodePages(async statusCodeContext =>
 
 app.UseRateLimiter();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
-  app.MapScalarApiReference();
+  // Development-only surface: in any other environment these routes are never mapped.
+  app.MapOpenApi().AllowAnonymous();
+  app.MapScalarApiReference().AllowAnonymous();
 }
 
 app.MapAuthEndpoints();

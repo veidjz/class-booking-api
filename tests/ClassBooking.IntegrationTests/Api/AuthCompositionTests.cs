@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -80,6 +83,61 @@ public sealed class AuthCompositionTests : IDisposable
     options.TokenValidationParameters.RoleClaimType.Should().Be("role");
     options.TokenValidationParameters.NameClaimType.Should().Be("sub");
   }
+
+  [Fact]
+  public async Task should_challenge_a_real_endpoint_that_fails_authorization()
+  {
+    using IServiceScope scope = _factory.Services.CreateScope();
+    HttpContext context = HttpContextWith(scope, new Endpoint(
+        _ => Task.CompletedTask,
+        new EndpointMetadataCollection(new HttpMethodMetadata(["GET"])),
+        "real endpoint"));
+    bool passedThrough = false;
+
+    await ResultHandler().HandleAsync(
+        _ => { passedThrough = true; return Task.CompletedTask; },
+        context,
+        FallbackPolicy(),
+        PolicyAuthorizationResult.Challenge());
+
+    passedThrough.Should().BeFalse();
+    context.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
+  }
+
+  [Theory]
+  [InlineData(false)]
+  [InlineData(true)]
+  public async Task should_let_a_routing_rejection_keep_its_transport_status(bool bareRejectionEndpoint)
+  {
+    using IServiceScope scope = _factory.Services.CreateScope();
+    HttpContext context = HttpContextWith(scope, bareRejectionEndpoint
+        ? new Endpoint(_ => Task.CompletedTask, EndpointMetadataCollection.Empty, "405 HTTP Method Not Allowed")
+        : null);
+    bool passedThrough = false;
+
+    await ResultHandler().HandleAsync(
+        _ => { passedThrough = true; return Task.CompletedTask; },
+        context,
+        FallbackPolicy(),
+        PolicyAuthorizationResult.Challenge());
+
+    passedThrough.Should().BeTrue();
+    context.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+  }
+
+  private static HttpContext HttpContextWith(IServiceScope scope, Endpoint? endpoint)
+  {
+    DefaultHttpContext context = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
+    context.SetEndpoint(endpoint);
+
+    return context;
+  }
+
+  private IAuthorizationMiddlewareResultHandler ResultHandler() =>
+      _factory.Services.GetRequiredService<IAuthorizationMiddlewareResultHandler>();
+
+  private AuthorizationPolicy FallbackPolicy() =>
+      AuthorizationOptions().FallbackPolicy!;
 
   private AuthorizationOptions AuthorizationOptions() =>
       _factory.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value;
