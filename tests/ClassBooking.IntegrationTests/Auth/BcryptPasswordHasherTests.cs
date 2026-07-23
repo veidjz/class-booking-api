@@ -54,6 +54,32 @@ public sealed class BcryptPasswordHasherTests
   }
 
   [Fact]
+  public void should_not_ask_for_a_rehash_of_a_current_hash()
+  {
+    string hash = _hasher.Hash(Password);
+
+    _hasher.NeedsRehash(hash).Should().BeFalse();
+  }
+
+  [Fact]
+  public void should_ask_for_a_rehash_of_a_hash_below_the_current_work_factor()
+  {
+    const string weakerHash = "$2a$11$t1jHY4W/8bgg8Ntn.4u3ru8gIPwPL07cevzP3rZ3KJz1HLk1mBaZC";
+
+    _hasher.NeedsRehash(weakerHash).Should().BeTrue();
+  }
+
+  [Theory]
+  [InlineData("")]
+  [InlineData("hash")]
+  [InlineData("$2a$12$")]
+  [InlineData("$9z$99$notarealhashvalue")]
+  public void should_not_ask_for_a_rehash_when_the_stored_hash_cannot_be_read(string storedHash)
+  {
+    _hasher.NeedsRehash(storedHash).Should().BeFalse();
+  }
+
+  [Fact]
   public void should_distinguish_passwords_that_differ_after_the_seventy_two_byte_truncation_point()
   {
     string prefix = new string('a', 72);
