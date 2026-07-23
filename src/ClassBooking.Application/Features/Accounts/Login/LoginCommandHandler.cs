@@ -3,12 +3,15 @@ using ClassBooking.Application.Abstractions.Messaging;
 using ClassBooking.Application.Common;
 using ClassBooking.Domain.Common;
 using ClassBooking.Domain.Users;
+using Microsoft.Extensions.Logging;
 
 namespace ClassBooking.Application.Features.Accounts.Login;
 
 internal sealed class LoginCommandHandler(
     IUserRepository users,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    ITokenService tokenService,
+    ILogger<LoginCommandHandler> logger)
     : ICommandHandler<LoginCommand, LoginResponse>
 {
   /// <summary>A discarded verification target so unknown e-mails cost the same as wrong passwords.</summary>
@@ -33,6 +36,16 @@ internal sealed class LoginCommandHandler(
       return Result.Failure<LoginResponse>(AuthenticationErrors.InvalidCredentials);
     }
 
-    throw new NotImplementedException("The success path arrives with the token issuance slice.");
+    if (passwordHasher.NeedsRehash(user.PasswordHash))
+    {
+      // Same transaction as the login (TD-006): a future work factor bump upgrades stored hashes
+      // one successful login at a time, with no migration.
+      user.RehashPassword(passwordHasher.Hash(command.Password));
+    }
+
+    AccessToken accessToken = tokenService.Issue(user);
+    logger.LogInformation("Login succeeded for {UserId}", user.Id);
+
+    return Result.Success(new LoginResponse("Bearer", accessToken.Token, accessToken.ExpiresInSeconds));
   }
 }
