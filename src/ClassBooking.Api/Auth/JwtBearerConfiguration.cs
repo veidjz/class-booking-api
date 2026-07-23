@@ -7,9 +7,16 @@ namespace ClassBooking.Api.Auth;
 
 internal sealed class JwtBearerConfiguration : IConfigureNamedOptions<JwtBearerOptions>
 {
-  private readonly JwtOptions _jwtOptions;
+  private static readonly TimeSpan LifetimeTolerance = TimeSpan.FromSeconds(30);
 
-  public JwtBearerConfiguration(IOptions<JwtOptions> jwtOptions) => _jwtOptions = jwtOptions.Value;
+  private readonly JwtOptions _jwtOptions;
+  private readonly TimeProvider _clock;
+
+  public JwtBearerConfiguration(IOptions<JwtOptions> jwtOptions, TimeProvider clock)
+  {
+    _jwtOptions = jwtOptions.Value;
+    _clock = clock;
+  }
 
   public void Configure(string? name, JwtBearerOptions options)
   {
@@ -33,6 +40,11 @@ internal sealed class JwtBearerConfiguration : IConfigureNamedOptions<JwtBearerO
       IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtOptions.SigningKey)),
       RoleClaimType = AuthorizationPolicies.RoleClaim,
       NameClaimType = "sub",
+      // The built-in lifetime check reads the machine clock; this validator replaces it entirely
+      // (ClockSkew included) so expiration follows the injected TimeProvider in every environment.
+      LifetimeValidator = (_, expires, _, _) =>
+          expires is not null
+          && _clock.GetUtcNow() <= new DateTimeOffset(expires.Value, TimeSpan.Zero).Add(LifetimeTolerance),
     };
   }
 }
