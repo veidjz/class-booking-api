@@ -64,4 +64,14 @@ public sealed class HostCompositionTests : DatabaseTestBase, IDisposable
 
     passwordHasher.Should().BeOfType<BcryptPasswordHasher>();
   }
+
+  [Fact]
+  public void should_register_a_single_token_service()
+  {
+    ITokenService first = _factory.Services.GetRequiredService<ITokenService>();
+    ITokenService second = _factory.Services.GetRequiredService<ITokenService>();
+
+    first.Should().BeOfType<JwtTokenService>();
+    first.Should().BeSameAs(second);
+  }
 }
