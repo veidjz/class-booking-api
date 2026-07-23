@@ -78,11 +78,50 @@ public sealed class OpenApiDocumentTests : IAsyncLifetime
         .Should().BeEquivalentTo("Auth");
   }
 
+  [Fact]
+  public void should_publish_a_stable_login_operation_name_and_tag()
+  {
+    LoginOperation().GetProperty("operationId").GetString().Should().Be("Login");
+    LoginOperation().GetProperty("tags").EnumerateArray().Select(tag => tag.GetString())
+        .Should().BeEquivalentTo("Auth");
+  }
+
+  [Fact]
+  public void should_publish_the_login_success_contract()
+  {
+    JsonElement properties = Resolve(LoginOperation().GetProperty("responses").GetProperty("200")
+        .GetProperty("content").GetProperty("application/json").GetProperty("schema"))
+        .GetProperty("properties");
+
+    properties.EnumerateObject().Select(property => property.Name)
+        .Should().BeEquivalentTo("tokenType", "accessToken", "expiresIn");
+  }
+
+  [Theory]
+  [InlineData("400")]
+  [InlineData("401")]
+  [InlineData("429")]
+  public void should_publish_the_login_error_contract(string status)
+  {
+    JsonElement properties = LoginErrorSchema(status).GetProperty("properties");
+
+    properties.TryGetProperty("errorCode", out _).Should().BeTrue();
+    properties.TryGetProperty("traceId", out _).Should().BeTrue();
+    properties.TryGetProperty("errors", out _).Should().Be(status == "400");
+  }
+
   private JsonElement Operation() =>
       _document.RootElement.GetProperty("paths").GetProperty("/api/v1/auth/register").GetProperty("post");
 
+  private JsonElement LoginOperation() =>
+      _document.RootElement.GetProperty("paths").GetProperty("/api/v1/auth/login").GetProperty("post");
+
   private JsonElement ErrorSchema(string status) =>
       Resolve(Operation().GetProperty("responses").GetProperty(status)
+          .GetProperty("content").GetProperty("application/problem+json").GetProperty("schema"));
+
+  private JsonElement LoginErrorSchema(string status) =>
+      Resolve(LoginOperation().GetProperty("responses").GetProperty(status)
           .GetProperty("content").GetProperty("application/problem+json").GetProperty("schema"));
 
   private JsonElement Schema(string name) =>
