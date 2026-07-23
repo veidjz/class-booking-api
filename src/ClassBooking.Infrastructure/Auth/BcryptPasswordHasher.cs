@@ -22,4 +22,20 @@ internal sealed class BcryptPasswordHasher : IPasswordHasher
       return false;
     }
   }
+
+  /// <remarks>
+  /// An unreadable hash already fails <see cref="Verify" />, so it never reaches a rehash; asking
+  /// for one would throw during login for the same credential the verification just rejected.
+  /// </remarks>
+  public bool NeedsRehash(string hash)
+  {
+    try
+    {
+      return BCrypt.Net.BCrypt.PasswordNeedsRehash(hash, AuthConstants.BcryptWorkFactor);
+    }
+    catch (Exception exception) when (exception is BCrypt.Net.SaltParseException or ArgumentException)
+    {
+      return false;
+    }
+  }
 }
