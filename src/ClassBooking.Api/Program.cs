@@ -8,6 +8,7 @@ using ClassBooking.Api.Serialization;
 using ClassBooking.Application;
 using ClassBooking.Domain.Common;
 using ClassBooking.Infrastructure;
+using ClassBooking.Infrastructure.Auth;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,14 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// The Worker never validates JWTs and never learns the key, so the options live in the Api composition.
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(
+        options => options.HasValidSigningKey(),
+        "The 'Jwt:SigningKey' must be Base64 content decoding to at least 32 bytes.")
+    .ValidateOnStart();
 builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddOpenApi(options =>
 {
