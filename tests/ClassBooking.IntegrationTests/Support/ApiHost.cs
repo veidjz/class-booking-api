@@ -11,6 +11,10 @@ internal static class ApiHost
   internal const string UnusedConnectionString =
       "Server=localhost;Port=3306;Database=classbooking;User Id=classbooking;Password=classbooking";
 
+  /// <summary>Test-only signing key so hosts outside Development satisfy the startup validation.</summary>
+  internal const string TestSigningKey =
+      "CWAYL5NZgpzP7RBfvcpqb1rFP5oWgu5uxe4eL/CAtQgEbGFGKK42vJBWTMhCrOlSJkKX2qCTiypdDPXFz5vtuA==";
+
   internal static WebApplicationFactory<Program> Configure(
       this WebApplicationFactory<Program> root,
       string connectionString,
@@ -26,6 +30,7 @@ internal static class ApiHost
 
         builder.UseSetting("ConnectionStrings:Database", connectionString);
         builder.UseSetting("RateLimiting:Enabled", rateLimiting ? "true" : "false");
+        builder.UseSetting("Jwt:SigningKey", TestSigningKey);
 
         if (configureServices is not null)
         {

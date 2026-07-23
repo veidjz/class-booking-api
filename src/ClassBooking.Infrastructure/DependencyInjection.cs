@@ -35,6 +35,7 @@ public static class DependencyInjection
     services.AddScoped<IUnitOfWork, UnitOfWork>();
     services.AddScoped<IUserRepository, UserRepository>();
     services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+    services.AddSingleton<ITokenService, JwtTokenService>();
 
     services.Replace(ServiceDescriptor.Singleton<TimeProvider>(new MicrosecondTimeProvider(TimeProvider.System)));
 

@@ -64,6 +64,24 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
   }
 
   [Fact]
+  [Trait("Scenario", "ACC-ADM-05")]
+  public async Task should_let_the_fresh_student_authenticate()
+  {
+    using JsonDocument registered = await RegisterAsync();
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage response = await client.PostAsJsonAsync(
+        "/api/v1/auth/login",
+        new { email = "ana.souza@example.com", password = Password });
+
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+    using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    body.RootElement.GetProperty("tokenType").GetString().Should().Be("Bearer");
+    body.RootElement.GetProperty("accessToken").GetString().Should().NotBeNullOrEmpty();
+  }
+
+  [Fact]
   public async Task should_store_a_hash_that_verifies_against_the_submitted_password()
   {
     using JsonDocument registered = await RegisterAsync();

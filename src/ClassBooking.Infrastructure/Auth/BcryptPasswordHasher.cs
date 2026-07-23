@@ -22,4 +22,16 @@ internal sealed class BcryptPasswordHasher : IPasswordHasher
       return false;
     }
   }
+
+  public bool NeedsRehash(string hash)
+  {
+    try
+    {
+      return BCrypt.Net.BCrypt.PasswordNeedsRehash(hash, AuthConstants.BcryptWorkFactor);
+    }
+    catch (Exception exception) when (exception is BCrypt.Net.SaltParseException or ArgumentException)
+    {
+      return false;
+    }
+  }
 }

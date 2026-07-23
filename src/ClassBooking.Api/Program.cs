@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ClassBooking.Api.Auth;
 using ClassBooking.Api.Endpoints.Auth;
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.Middleware;
@@ -8,6 +9,7 @@ using ClassBooking.Api.Serialization;
 using ClassBooking.Application;
 using ClassBooking.Domain.Common;
 using ClassBooking.Infrastructure;
+using ClassBooking.Infrastructure.Auth;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,14 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(
+        options => options.HasValidSigningKey(),
+        "The 'Jwt:SigningKey' must be Base64 content decoding to at least 32 bytes.")
+    .ValidateOnStart();
+builder.Services.AddApiAuthentication();
 builder.Services.AddRateLimiting(builder.Configuration);
 builder.Services.AddOpenApi(options =>
 {
@@ -51,10 +61,13 @@ app.UseStatusCodePages(async statusCodeContext =>
 
 app.UseRateLimiter();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
-  app.MapOpenApi();
-  app.MapScalarApiReference();
+  app.MapOpenApi().AllowAnonymous();
+  app.MapScalarApiReference().AllowAnonymous();
 }
 
 app.MapAuthEndpoints();

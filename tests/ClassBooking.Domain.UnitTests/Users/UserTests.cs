@@ -30,6 +30,23 @@ public sealed class UserTests
   }
 
   [Fact]
+  public void should_replace_only_the_password_hash_when_rehashed()
+  {
+    User admin = User.CreateAdmin("Root", "root@example.com", "hash", CreatedAt);
+    admin.ClearDomainEvents();
+
+    admin.RehashPassword("stronger-hash");
+
+    admin.PasswordHash.Should().Be("stronger-hash");
+    admin.Name.Should().Be("Root");
+    admin.Email.Should().Be("root@example.com");
+    admin.Role.Should().Be(UserRole.Admin);
+    admin.IsActive.Should().BeTrue();
+    admin.CreatedAt.Should().Be(CreatedAt);
+    admin.DomainEvents.Should().BeEmpty();
+  }
+
+  [Fact]
   public void should_expose_no_write_path_for_the_role()
   {
     PropertyInfo role = typeof(User).GetProperty(nameof(User.Role))!;
