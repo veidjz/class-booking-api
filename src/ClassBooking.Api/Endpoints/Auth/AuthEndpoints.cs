@@ -16,6 +16,14 @@ internal static class AuthEndpoints
   {
     RouteGroupBuilder group = builder.MapGroup("/api/v1/auth");
 
+    // Auth responses carry tokens; no cache anywhere between the API and the caller may keep them.
+    group.AddEndpointFilter(async (invocationContext, next) =>
+    {
+      invocationContext.HttpContext.Response.Headers.CacheControl = "no-store";
+
+      return await next(invocationContext);
+    });
+
     group.MapPost("/register", RegisterStudentAsync)
         .WithName("RegisterStudent")
         .WithTags("Auth")
