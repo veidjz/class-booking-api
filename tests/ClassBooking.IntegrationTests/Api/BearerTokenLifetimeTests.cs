@@ -32,6 +32,7 @@ public sealed class BearerTokenLifetimeTests : IDisposable
   [InlineData(0, true)]
   [InlineData(59 * 60, true)]
   [InlineData(60 * 60 + 29, true)]
+  [InlineData(60 * 60 + 30, true)]
   [InlineData(60 * 60 + 31, false)]
   [InlineData(61 * 60, false)]
   public async Task should_validate_the_token_lifetime_on_the_injected_clock(int secondsAfterIssuance, bool valid)
