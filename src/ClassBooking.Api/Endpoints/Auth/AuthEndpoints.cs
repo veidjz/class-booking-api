@@ -1,5 +1,6 @@
 using ClassBooking.Api.Errors;
 using ClassBooking.Api.RateLimiting;
+using ClassBooking.Application.Features.Accounts.Login;
 using ClassBooking.Application.Features.Accounts.RegisterStudent;
 using ClassBooking.Domain.Common;
 using MediatR;
@@ -25,6 +26,9 @@ internal static class AuthEndpoints
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict, ProblemMediaType)
         .Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests, ProblemMediaType);
 
+    group.MapPost("/login", LoginAsync)
+        .AllowAnonymous();
+
     return group;
   }
 
@@ -43,5 +47,22 @@ internal static class AuthEndpoints
     }
 
     return Results.Created($"/api/v1/students/{result.Value.Id}", result.Value);
+  }
+
+  private static async Task<IResult> LoginAsync(
+      LoginRequest request,
+      ISender sender,
+      HttpContext httpContext,
+      CancellationToken cancellationToken)
+  {
+    LoginCommand command = new LoginCommand(request.Email, request.Password);
+
+    Result<LoginResponse> result = await sender.Send(command, cancellationToken);
+    if (result.IsFailure)
+    {
+      return result.ToProblem(httpContext);
+    }
+
+    return Results.Ok(result.Value);
   }
 }
