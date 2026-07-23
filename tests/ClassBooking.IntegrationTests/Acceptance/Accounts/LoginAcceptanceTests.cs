@@ -52,6 +52,7 @@ public sealed class LoginAcceptanceTests : DatabaseTestBase, IDisposable
         new { email = Email, password = Password });
 
     response.StatusCode.Should().Be(HttpStatusCode.OK);
+    response.Headers.CacheControl!.NoStore.Should().BeTrue("the response carries a token");
 
     using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
     body.RootElement.EnumerateObject().Select(property => property.Name)
