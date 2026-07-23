@@ -30,7 +30,6 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// The Worker never validates JWTs and never learns the key, so the options live in the Api composition.
 builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
     .Validate(
@@ -67,7 +66,6 @@ app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-  // Development-only surface: in any other environment these routes are never mapped.
   app.MapOpenApi().AllowAnonymous();
   app.MapScalarApiReference().AllowAnonymous();
 }

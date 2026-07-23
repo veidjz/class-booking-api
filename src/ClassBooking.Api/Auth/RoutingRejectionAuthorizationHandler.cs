@@ -13,18 +13,16 @@ internal sealed class RoutingRejectionAuthorizationHandler : IAuthorizationMiddl
       AuthorizationPolicy policy,
       PolicyAuthorizationResult authorizeResult)
   {
+    // Without this, the fallback policy turns routing rejections (unknown path, wrong verb,
+    // unsupported content type) into 401 instead of their 404/405/415 transport status.
     if (!authorizeResult.Succeeded && IsRoutingRejection(context.GetEndpoint()))
     {
-      // The fallback policy also reaches requests routing already rejected (unknown path, wrong
-      // verb, unsupported content type); those keep their transport status instead of becoming 401.
       return next(context);
     }
 
     return _inner.HandleAsync(next, context, policy, authorizeResult);
   }
 
-  // ponytail: rejection endpoints are the only ones the framework builds without metadata; match
-  // the endpoints by type instead if a framework update ever changes that.
   private static bool IsRoutingRejection(Endpoint? endpoint) =>
       endpoint is null || endpoint.Metadata.Count == 0;
 }

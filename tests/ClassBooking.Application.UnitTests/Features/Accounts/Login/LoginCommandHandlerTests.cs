@@ -37,8 +37,6 @@ public sealed class LoginCommandHandlerTests
   [Fact]
   public async Task should_burn_a_real_verification_for_an_unknown_email()
   {
-    // Skipping the BCrypt cost would answer unknown e-mails in microseconds and known ones in
-    // hundreds of milliseconds, telling the caller which e-mails exist.
     await _handler.Handle(Command(), CancellationToken.None);
 
     _passwordHasher.Received(1).Verify(Password, LoginCommandHandler.GhostPasswordHash);
@@ -77,8 +75,6 @@ public sealed class LoginCommandHandlerTests
   [Fact]
   public async Task should_still_verify_the_password_of_a_deactivated_account()
   {
-    // Short-circuiting on IsActive before the BCrypt cost would make deactivated accounts
-    // distinguishable by timing; the verification always runs first.
     DeactivatedAccount();
     _passwordHasher.Verify(Password, StoredHash).Returns(true);
 

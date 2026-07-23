@@ -2,11 +2,8 @@ using FluentValidation;
 
 namespace ClassBooking.Application.Features.Accounts.Login;
 
-/// <remarks>
-/// Presence and ceiling only: judging the e-mail format or the registration minimum here would
-/// turn a nonexistent or legacy credential into a 400, leaking the structure that the uniform
-/// 401 exists to hide. The password is measured exactly as sent, never trimmed.
-/// </remarks>
+// Presence and ceiling only, on purpose: judging the e-mail format or a minimum length would turn a
+// nonexistent or legacy credential into a 400, leaking what the uniform 401 hides. Password is not trimmed.
 internal sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
 {
   public LoginCommandValidator()

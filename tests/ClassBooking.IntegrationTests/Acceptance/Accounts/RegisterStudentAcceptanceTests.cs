@@ -63,10 +63,6 @@ public sealed class RegisterStudentAcceptanceTests : DatabaseTestBase, IDisposab
     (await ScalarAsync<long>("select count(*) from teachers")).Should().Be(0);
   }
 
-  /// <remarks>
-  /// Covers the scenario clause "the fresh Student authenticates"; the search clause stays with
-  /// the phase that ships the teacher search.
-  /// </remarks>
   [Fact]
   [Trait("Scenario", "ACC-ADM-05")]
   public async Task should_let_the_fresh_student_authenticate()

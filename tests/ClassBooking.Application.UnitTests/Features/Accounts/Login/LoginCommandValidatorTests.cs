@@ -37,8 +37,6 @@ public sealed class LoginCommandValidatorTests
   [InlineData("  ana.souza@example.com  ")]
   public void should_not_judge_the_email_format(string email)
   {
-    // A malformed e-mail never exists normalized in the database, so it must fall into the same
-    // uniform 401 as any other wrong credential instead of leaking structure through a 400.
     ValidationResult result = _validator.Validate(Command(email: email));
 
     result.Errors.Should().NotContain(failure => failure.PropertyName == "Email");
@@ -58,8 +56,6 @@ public sealed class LoginCommandValidatorTests
   [InlineData("       ")]
   public void should_reject_the_password_when_it_is_missing_or_blank(string? password)
   {
-    // The registration rule rejects blank passwords the same way, so no legitimate credential
-    // is ever made of spaces only and none turns into a 400 here.
     ValidationResult result = _validator.Validate(Command(password: password));
 
     result.Errors.Should().ContainSingle(failure => failure.PropertyName == "Password");
@@ -76,7 +72,6 @@ public sealed class LoginCommandValidatorTests
   [Fact]
   public void should_not_require_the_registration_minimum_for_the_password()
   {
-    // An account created under an older, shorter policy must reach the uniform 401, never a 400.
     ValidationResult result = _validator.Validate(Command(password: new string('a', 7)));
 
     result.Errors.Should().NotContain(failure => failure.PropertyName == "Password");

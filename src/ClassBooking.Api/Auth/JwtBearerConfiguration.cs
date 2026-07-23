@@ -40,8 +40,7 @@ internal sealed class JwtBearerConfiguration : IConfigureNamedOptions<JwtBearerO
       IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(_jwtOptions.SigningKey)),
       RoleClaimType = AuthorizationPolicies.RoleClaim,
       NameClaimType = "sub",
-      // The built-in lifetime check reads the machine clock; this validator replaces it entirely
-      // (ClockSkew included) so expiration follows the injected TimeProvider in every environment.
+      // Replaces the built-in check, which reads the machine clock, so expiration follows the injected TimeProvider.
       LifetimeValidator = (_, expires, _, _) =>
           expires is not null
           && _clock.GetUtcNow() <= new DateTimeOffset(expires.Value, TimeSpan.Zero).Add(LifetimeTolerance),

@@ -23,10 +23,6 @@ internal sealed class BcryptPasswordHasher : IPasswordHasher
     }
   }
 
-  /// <remarks>
-  /// An unreadable hash already fails <see cref="Verify" />, so it never reaches a rehash; asking
-  /// for one would throw during login for the same credential the verification just rejected.
-  /// </remarks>
   public bool NeedsRehash(string hash)
   {
     try
