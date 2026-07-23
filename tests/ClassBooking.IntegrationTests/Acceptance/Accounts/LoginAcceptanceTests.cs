@@ -117,6 +117,29 @@ public sealed class LoginAcceptanceTests : DatabaseTestBase, IDisposable
   }
 
   [Fact]
+  public async Task should_persist_a_stronger_hash_when_the_stored_one_is_stale()
+  {
+    await AddAsync(Student.Register("Ana Souza", Email, StaleHash, Now));
+    using HttpClient client = _factory.CreateClient();
+
+    using HttpResponseMessage first = await client.PostAsJsonAsync(
+        LoginRoute,
+        new { email = Email, password = Password });
+
+    first.StatusCode.Should().Be(HttpStatusCode.OK);
+    string upgraded = (await ScalarAsync<string>("select password_hash from users"))!;
+    upgraded.Should().StartWith("$2a$12$").And.NotBe(StaleHash);
+    _factory.Services.GetRequiredService<IPasswordHasher>().Verify(Password, upgraded).Should().BeTrue();
+
+    using HttpResponseMessage second = await client.PostAsJsonAsync(
+        LoginRoute,
+        new { email = Email, password = Password });
+
+    second.StatusCode.Should().Be(HttpStatusCode.OK);
+    (await ScalarAsync<string>("select password_hash from users")).Should().Be(upgraded);
+  }
+
+  [Fact]
   public async Task should_reject_a_missing_field_as_a_validation_failure()
   {
     using HttpClient client = _factory.CreateClient();
