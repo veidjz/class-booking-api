@@ -27,7 +27,8 @@ internal static class AuthEndpoints
         .Produces<ErrorResponse>(StatusCodes.Status429TooManyRequests, ProblemMediaType);
 
     group.MapPost("/login", LoginAsync)
-        .AllowAnonymous();
+        .AllowAnonymous()
+        .RequireRateLimiting(RateLimitPolicies.Auth);
 
     return group;
   }
