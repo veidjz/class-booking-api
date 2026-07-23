@@ -61,4 +61,6 @@ public class User : AggregateRoot
 
     return true;
   }
+
+  public void RehashPassword(string passwordHash) => PasswordHash = passwordHash;
 }
